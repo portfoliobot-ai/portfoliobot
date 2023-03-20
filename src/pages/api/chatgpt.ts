@@ -2,11 +2,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Configuration, OpenAIApi } from 'openai'
 
-type Investor = {
-  age: number,
-  targetRetirementAge: number
-}
-
 type ChatGptFeedback = {
   feedback: string,
 }

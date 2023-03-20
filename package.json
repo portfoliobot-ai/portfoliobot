@@ -1,5 +1,5 @@
 {
-  "name": "stonkbot",
+  "name": "portfoliobot",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -16,10 +16,12 @@
     "eslint-config-next": "13.2.4",
     "next": "13.2.4",
     "openai": "^3.2.1",
+    "primeflex": "^3.3.0",
     "primeicons": "^6.0.1",
     "primereact": "^9.2.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "typescript": "5.0.2"
+    "typescript": "5.0.2",
+    "typewriter-effect": "^2.19.0"
   }
 }
