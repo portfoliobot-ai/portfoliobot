@@ -3,7 +3,7 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 6rem;
+  padding: 8rem;
   min-height: 100vh;
   /* width: 1000px; */
 }
@@ -16,6 +16,29 @@
 .navbar {
   text-align: center;
   color: #6666ff;
+  /* vertical-align: middle;  */
+  position: fixed;
+  top: 0;
+  width: 100%;
+  border-bottom: solid #e2e6eb;
+
+  display: flex;
+  align-items : center;
+  justify-content: center;
+
+  background-color: white;
+  z-index: 999;
+  
+  /* font-family: Poppins, sans-serif;
+  font-size: 24px;
+  font-weight: bold; */
+    /* display: flex;
+    align-items: center; 
+    justify-content: center; */
+}
+
+.navbar h1 {
+  vertical-align: middle; 
 }
 
 /* TODO: Make Mobile Responsive */

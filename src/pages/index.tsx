@@ -3,14 +3,14 @@ import Image from 'next/image'
 
 import styles from '@/styles/Home.module.css'
 
-import "primereact/resources/themes/viva-dark/theme.css";     
+import "primereact/resources/themes/viva-light/theme.css";     
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css"; 
 import "primeflex/primeflex.css"
 
 import { Button } from 'primereact/button';
 import { Steps } from 'primereact/steps';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { MenuItem, MenuItemCommandEvent } from 'primereact/menuitem';
 import { Card } from 'primereact/card';
 import { SelectButton } from 'primereact/selectbutton';
@@ -19,8 +19,13 @@ import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { ColumnGroup } from 'primereact/columngroup';
+import { Row } from 'primereact/row';
 import { AutoComplete } from 'primereact/autocomplete';
 import { Accordion, AccordionTab } from 'primereact/accordion';
+import { Divider } from 'primereact/divider';
+import { Chips } from 'primereact/chips';
+import { Badge } from 'primereact/badge';
 
 import { InputNumber } from 'primereact/inputnumber';
         
@@ -43,12 +48,6 @@ export default function Home() {
         }
     },
     {
-      label: 'Breakdown',
-      command: (event: MenuItemCommandEvent) => {
-          // toast.current.show({ severity: 'info', summary: 'Third Step', detail: event.item.label });
-      }
-    },
-    {
         label: 'AI Feedback',
         command: (event: MenuItemCommandEvent) => {
             // toast.current.show({ severity: 'info', summary: 'Last Step', detail: event.item.label });
@@ -57,7 +56,6 @@ export default function Home() {
   ]
 
   const [investorInfo, setInvestorInfo] = useState(null)
-  const [portfolioHoldings, setPortfolioHoldings] = useState([])
   const [chatGptFeedback, setChatGptFeedback] = useState({})
 
   const portfolioOptions = ['Manual', 'Import'];
@@ -70,16 +68,16 @@ export default function Home() {
       { name: 'Aggresive', code: 'Aggresive' },
   ];
 
-  const [selectedStocks, setSelectedStocks] = useState([]);
-  const [filteredStocks, setFilteredStocks] = useState([]);
+  const [stockSearchSelectedItems, setStockSearchSelectedItems] = useState([]);
+  const [stockSearchSuggestions, setStockSearchSuggestions] = useState([]);
+
+  const [portfolioHoldings, setPortfolioHoldings] = useState<any[]>([]);
 
   const searchStocks = (event: any) => {
     fetch(`/api/iexcloud/search/${event.query}`)
       .then((response) => response.json())
       .then((data) => {
-        console.log(data);
-        //  setPortfolioHoldings(data);
-        setFilteredStocks(data)
+        setStockSearchSuggestions(data)
       })
       .catch((err) => {
           console.log(err.message);
@@ -87,20 +85,45 @@ export default function Home() {
       // setItems([...Array(10).keys()].map(item => event.query + '-' + item));
   }
 
+  // const onSelectStock = (selectedStocks: any) => {
+  //   console.log("SELECTED STOCKS: ", selectedStocks)
+  //   const holdings = selectedStocks.map((selectedStock: any) => {
+  //     return {
+  //       ticker: selectedStock.ticker,
+  //       companyName: selectedStock.securityName,
+  //       allocation: 0,
+  //     }
+  //   })
+
+  //   setPortfolioHoldings(holdings)
+  // }
+  useEffect(() => {
+    console.log('SELECTED: ', stockSearchSelectedItems)
+    if (stockSearchSelectedItems && stockSearchSelectedItems?.length > 0) {
+      const holdings = stockSearchSelectedItems.map((selectedStock: any) => {
+        return {
+          ticker: selectedStock.symbol,
+          companyName: selectedStock.securityName,
+          allocation: 0,
+        }
+      })
+  
+      setPortfolioHoldings(holdings)
+    }
+  }, [stockSearchSelectedItems])
+
   const stockSearchTemplate = (stock: any) => {
     return (
       <div style={{display: "flex", alignItems: "center" }}>
-        {/* <Image
+        <Image
           className='stock-logo mr-2'
-          // TODO: Need alt
           alt='Image of company logo'
           src={`https://storage.googleapis.com/iex/api/logos/${stock.symbol}.png`}
           // onerror="this.onerror=null; this.src=''"
           // onError={() => setSrc('/assets/ima ge-error.png')}
-          // style={{width: "24px", height: "auto"}}
           width={24}
           height={24}
-        /> */}
+        />
         <small>
           <b>{stock.symbol}</b>
         </small>
@@ -112,6 +135,26 @@ export default function Home() {
     )
   }
 
+  const stockColumnTemplate = (stock) => {
+      return (
+        <div style={{display: "flex", alignItems: "center" }}>
+          <Image
+            className='stock-logo mr-4'
+            alt='Image of company logo'
+            src={`https://storage.googleapis.com/iex/api/logos/${stock.ticker}.png`}
+            // onerror="this.onerror=null; this.src=''"
+            // onError={() => setSrc('/assets/ima ge-error.png')}
+            width={36}
+            height={36}
+          />
+          <div>
+            <p><b>{stock.ticker}</b></p>
+            <small>{stock.companyName}</small>
+          </div>
+        </div>
+      )
+  };
+
   const onClickNext = () => {
     setActiveIndex(activeIndex + 1)
 
@@ -121,10 +164,8 @@ export default function Home() {
         break;
       case 1:
         break;
-      case 2:
-        break;
-      case 3:
-        // fetch('api/')
+      case items.length - 1:
+        // fetch('api/chatgpt/')
         // .then((response) => response.json())
         // .then((data) => {
         //    console.log(data);
@@ -137,6 +178,22 @@ export default function Home() {
     }
   }
 
+  const footer = (
+    <span>
+      Total: 100%
+    </span>
+  )
+
+  const stockTableFooterGroup = (
+      <ColumnGroup>
+          <Row>
+              <Column footer={footer} colSpan={2} footerStyle={{ textAlign: 'center' }} />
+              {/* <Column footer={"Test"} />
+              <Column footer={"test"} /> */}
+          </Row>
+      </ColumnGroup>
+  );
+
   return (
     <>
       <Head>
@@ -148,7 +205,8 @@ export default function Home() {
       </Head>
 
       <div className={styles.navbar}>
-        <h1>PortfolioBot</h1>
+        <h1>PortfolioBot </h1>
+        <Badge className='ml-2' value="BETA" severity="warning"></Badge>
       </div>
 
       <main className={styles.main}>
@@ -160,7 +218,11 @@ export default function Home() {
             <h1>Are your investments
               <Typewriter
                 options={{
-                  strings: ['<span> diversified?</span>', '<span> cost-effective?</span>'],
+                  strings: [
+                    ' diversified?',
+                    ' cost-effective?',
+                    ' too risky?'
+                  ],
                   autoStart: true,
                   loop: true,
                   wrapperClassName: 'emphasized'
@@ -185,10 +247,9 @@ export default function Home() {
 
           {/* FIRST STEP */}
           <div className={ activeIndex === 0 ? undefined : 'hidden'}>
-            {/* <Fieldset legend="Enter your portfolio allocations"> */}
             <Card>
               <SelectButton value={selectedPortfolioOption} onChange={(e) => setSelectedPortfolioOption(e.value)} options={portfolioOptions} />
-              {/* <InputText placeholder="Holdings" /> */}
+
               <br></br>
 
               {
@@ -200,25 +261,27 @@ export default function Home() {
                       {/* <label htmlFor="stockSearch">Search</label> */}
                       <AutoComplete
                         inputId="stockSearch"
-                        value={selectedStocks}
-                        suggestions={filteredStocks} 
+                        field="symbol"
+                        value={stockSearchSelectedItems}
+                        suggestions={stockSearchSuggestions} 
                         completeMethod={searchStocks}
-                        multiple
-                        // onChange={(e) => setSelectedCountry(e.value)}
+                        multiple={true}
+                        onChange={(e) => setStockSearchSelectedItems(e.value)}
                         itemTemplate={stockSearchTemplate}
-                        placeholder="Search for stocks e.g. AAPL or Apple"
+                        placeholder="Search for stocks or ETFs e.g. AAPL or Apple"
+                        forceSelection
                       />
-                      {/* <small id="stockSearch-help">
-                          Test
-                      </small> */}
                     {/* </div> */}
                     </div>
-
-                    {/* <br></br> */}
       
-                    <DataTable value={[]} showGridlines>
-                      <Column field="stock" header="Stock"></Column>
-                      <Column field="allocation" header="Allocation"></Column>
+                    <DataTable
+                      value={portfolioHoldings}
+                      showGridlines
+                      editMode="cell"
+                      footerColumnGroup={stockTableFooterGroup}
+                    >
+                      <Column header="Stock" body={stockColumnTemplate}></Column>
+                      <Column field="allocation" header="Allocation %"></Column>
                     </DataTable>
                   </div>
                 )
@@ -231,12 +294,10 @@ export default function Home() {
                 )
               }
             </Card>
-            {/* </Fieldset> */}
           </div>
 
           {/* SECOND STEP */}
           <div className={ activeIndex === 1 ? 'step' : 'hidden'}>
-            {/* <Fieldset legend="Investor Info"> */}
             <Card>
               <div className="p-inputgroup">
                   <InputNumber placeholder="Your Age" />
@@ -249,20 +310,19 @@ export default function Home() {
                   placeholder="Risk Tolerance" className="w-full md:w-14rem" />
               </div>
             </Card>
-            {/* </Fieldset> */}
           </div>
 
           {/* THIRD STEP */}
-          <div className={ activeIndex === 2 ? undefined : 'hidden'}>
+          {/* <div className={ activeIndex === 2 ? undefined : 'hidden'}>
               <Card>
                 Test
               </Card>
-          </div>
+          </div> */}
 
           <br></br>
 
           {/* FINAL STEP */}
-          <div className={ activeIndex === 3 ? undefined : 'hidden'}>
+          <div className={ activeIndex === items.length - 1 ? undefined : 'hidden'}>
             <Accordion multiple activeIndex={[0,1]}>
                 <AccordionTab header="Is my portfolio diversified enough?">
                     <small className="m-0">
@@ -281,36 +341,6 @@ export default function Home() {
                     </small>
                 </AccordionTab>
             </Accordion>
-            {/* <Fieldset legend="Summary" toggleable>
-              <p className="m-0">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                  consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-                  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </p>
-            </Fieldset>
-
-            <br></br>
-
-            <Fieldset legend="Is my portfolio diversified enough?" toggleable>
-              <p className="m-0">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                  consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-                  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </p>
-            </Fieldset>
-
-            <br></br>
-
-            <Fieldset legend="What other stocks/ETFS should I invest in?" toggleable>
-              <p className="m-0">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                  consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-                  Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-              </p>
-            </Fieldset> */}
           </div>
 
           <br></br>
@@ -327,6 +357,7 @@ export default function Home() {
               activeIndex < items.length - 1 && (
                 <Button
                   label={ activeIndex === 0 ? 'Get Started' : 'Next' }
+                  disabled={portfolioHoldings.length === 0} 
                   onClick={() => setActiveIndex(activeIndex + 1)}
                 />
               )
@@ -334,6 +365,8 @@ export default function Home() {
           </div>
 
         </div>
+
+        <Divider />
       </main>
     </>
   )

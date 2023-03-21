@@ -12,8 +12,6 @@ export default function handler(
   fetch(`https://cloud.iexapis.com/stable/search/${searchText}?token=${process.env.IEX_CLOUD_API_TOKEN}`)
     .then((response) => response.json())
     .then((data) => {
-      console.log("JSON: ", data);
-      //  setPortfolioHoldings(data);
       res.status(200).json(data)
     })
     .catch((err) => {
