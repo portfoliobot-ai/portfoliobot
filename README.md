@@ -2,14 +2,14 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
+Create an `.env.local` file at the root of this project directory
+
 First, run the development server:
 
 ```bash
+nvm install # or nvm use if you already have the version of Node installed specified in the .nvmrc
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.

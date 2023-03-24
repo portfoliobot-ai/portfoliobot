@@ -10,7 +10,7 @@ import "primeflex/primeflex.css"
 
 import { Button } from 'primereact/button';
 import { Steps } from 'primereact/steps';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MenuItem, MenuItemCommandEvent } from 'primereact/menuitem';
 import { Card } from 'primereact/card';
 import { SelectButton } from 'primereact/selectbutton';
@@ -26,6 +26,8 @@ import { Accordion, AccordionTab } from 'primereact/accordion';
 import { Divider } from 'primereact/divider';
 import { Chips } from 'primereact/chips';
 import { Badge } from 'primereact/badge';
+import { RadioButton } from 'primereact/radiobutton';
+import { FileUpload } from 'primereact/fileupload';
 
 import { InputNumber } from 'primereact/inputnumber';
         
@@ -107,8 +109,10 @@ export default function Home() {
           allocation: 0,
         }
       })
+
+      // TODO: Check for duplicates
   
-      setPortfolioHoldings(holdings)
+      setPortfolioHoldings([...portfolioHoldings, ...holdings])
     }
   }, [stockSearchSelectedItems])
 
@@ -169,7 +173,6 @@ export default function Home() {
         // .then((response) => response.json())
         // .then((data) => {
         //    console.log(data);
-        //   //  setPortfolioHoldings(data);
         // })
         // .catch((err) => {
         //     console.log(err.message);
@@ -179,20 +182,71 @@ export default function Home() {
   }
 
   const footer = (
-    <span>
-      Total: 100%
+    <span
+      style={{
+        color: portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0) === 100 ?
+          '#32a852' :
+          '#ff1717'
+      }}
+    >
+      Total: {portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0)}%
     </span>
   )
 
   const stockTableFooterGroup = (
       <ColumnGroup>
           <Row>
-              <Column footer={footer} colSpan={2} footerStyle={{ textAlign: 'center' }} />
+              <Column footer={footer} colSpan={3} footerStyle={{ textAlign: 'center' }} />
               {/* <Column footer={"Test"} />
               <Column footer={"test"} /> */}
           </Row>
       </ColumnGroup>
   );
+
+  const removePortfolioHolding = (holding) => {
+    const updatedHoldings = portfolioHoldings.filter((val) => val.ticker !== holding.ticker);
+    setPortfolioHoldings(updatedHoldings);
+  }
+
+  const tableActionsCellTemplate = (rowData) => {
+    return (
+      <React.Fragment>
+        <div className='text-center'>
+          <Button
+            size="small"
+            icon="pi pi-trash"
+            rounded
+            outlined
+            severity="danger"
+            onClick={() => removePortfolioHolding(rowData)}
+          />
+        </div>
+      </React.Fragment>
+    );
+  };
+
+  const allocationEditor = (options) => {
+    return <InputNumber value={options.value} onValueChange={(e) => options.editorCallback(e.value)} />;
+  };
+
+  // TODO: use useCallback
+  const onPortfolioAllocationCellEditComplete = (e) => {
+    let { rowData, newValue, field, originalEvent: event } = e;
+
+    // console.log("FIELD: ", field)
+    const updatedHoldings = portfolioHoldings.map(holding => {
+      if (holding.ticker === rowData.ticker) {
+        let updatedHolding = {...holding}
+        updatedHolding.allocation = newValue
+        return updatedHolding
+      }
+      return holding
+    });
+
+    setPortfolioHoldings(updatedHoldings)
+
+    rowData[field] = newValue; //+ "%"
+  };
 
   return (
     <>
@@ -214,26 +268,28 @@ export default function Home() {
         <div className={styles.description}>
 
           {/* HEADER SECTION */}
-          <div className='mb-5'>
-            <h1>Are your investments
-              <Typewriter
-                options={{
-                  strings: [
-                    ' diversified?',
-                    ' cost-effective?',
-                    ' too risky?'
-                  ],
-                  autoStart: true,
-                  loop: true,
-                  wrapperClassName: 'emphasized'
-                }}
-              />
-            </h1>
-            <br></br>
-            <p className='homepage-secondary-header'>
-              Get <span className='emphasized'>AI-driven</span> feedback on your stock portfolio in minutes
-            </p>
-          </div>
+          { activeIndex === 0 && (
+            <div className='mb-5 text-center'>
+              <h1>Are your investments
+                <Typewriter
+                  options={{
+                    strings: [
+                      ' diversified?',
+                      ' cost-effective?',
+                      ' too risky?'
+                    ],
+                    autoStart: true,
+                    loop: true,
+                    wrapperClassName: 'emphasized'
+                  }}
+                />
+              </h1>
+              <br></br>
+              <p className='homepage-secondary-header'>
+                Get <span className='emphasized'>AI-driven</span> feedback on your stock portfolio in minutes
+              </p>
+            </div>
+          )}
 
           {/* STEPS */}
           <div className='mb-3'>
@@ -255,33 +311,40 @@ export default function Home() {
               {
                 selectedPortfolioOption === "Manual" && (
                   <div>
-                    <div className='mb-2 p-inputgroup'>
-                    {/* <div className="flex flex-column gap-2"> */}
-                      {/* <i className="pi pi-search" /> */}
-                      {/* <label htmlFor="stockSearch">Search</label> */}
+                    <div className='mb-1 p-inputgroup'>
                       <AutoComplete
                         inputId="stockSearch"
                         field="symbol"
                         value={stockSearchSelectedItems}
                         suggestions={stockSearchSuggestions} 
                         completeMethod={searchStocks}
+                        // TODO: Remove multiple attribute and make setStockSearchSelectedItems an object not an array
                         multiple={true}
                         onChange={(e) => setStockSearchSelectedItems(e.value)}
                         itemTemplate={stockSearchTemplate}
                         placeholder="Search for stocks or ETFs e.g. AAPL or Apple"
                         forceSelection
                       />
-                    {/* </div> */}
                     </div>
-      
+
+                    <div style={{ fontSize: '0.7em'}} className='ml-2 mb-3'><a href="https://iexcloud.io">Data provided by IEX Cloud</a></div>
+
                     <DataTable
                       value={portfolioHoldings}
                       showGridlines
                       editMode="cell"
+                      size='small'
                       footerColumnGroup={stockTableFooterGroup}
+                      emptyMessage="Add assets to your portfolio using the search field above."
                     >
-                      <Column header="Stock" body={stockColumnTemplate}></Column>
-                      <Column field="allocation" header="Allocation %"></Column>
+                      <Column header="Stock" body={stockColumnTemplate}/>
+                      <Column
+                        field="allocation"
+                        header="Allocation %"
+                        editor={(options) => allocationEditor(options)}
+                        onCellEditComplete={onPortfolioAllocationCellEditComplete}
+                      />
+                      <Column body={tableActionsCellTemplate} exportable={false}/>
                     </DataTable>
                   </div>
                 )
@@ -289,7 +352,29 @@ export default function Home() {
               {
                 selectedPortfolioOption === "Import" && (
                   <div>
-                    <h2>Coming Soon!</h2>
+                    <div className="card flex mb-4">
+                      <div className="flex flex-wrap gap-3">
+                          <div className="flex align-items-center">
+                              <RadioButton inputId="csv" name="csv" value="CSV" onChange={(e) => {}} checked={true} />
+                              <label htmlFor="csv" className="ml-2">CSV/XLS</label>
+                          </div>
+                          <div className="flex align-items-center">
+                              <RadioButton inputId="connect-account" name="account" value="Account" onChange={(e) => {}} checked={false} />
+                              <label htmlFor="connect-account" className="ml-2">Connect Account</label>
+                          </div>
+                      </div>
+                    </div>
+                    <div>
+                      {/* <p>Export your portfolio from your brokerage account and upload the file below.</p> */}
+                      <div style={{ fontSize: '0.75em'}}>Export your portfolio from your brokerage account and upload the file below.</div>
+                      <div style={{ fontSize: '0.75em'}} className='mb-3'>We currently only support the exports of <b>TDAmeritrade</b> & <b>Fidelity</b>, but aim to support more!</div>
+                      {/* <Button label="Upload"></Button> */}
+                      {/* <Toast ref={toast}></Toast> */}
+                      <FileUpload mode="basic" chooseLabel='Upload' name="demo[]" url="/api/upload" accept="image/*" maxFileSize={1000000} onUpload={() => {}} />
+                    </div>
+                    <div>
+                      {/* <h2>Coming Soon!</h2> */}
+                    </div>
                   </div>
                 )
               }
@@ -311,13 +396,6 @@ export default function Home() {
               </div>
             </Card>
           </div>
-
-          {/* THIRD STEP */}
-          {/* <div className={ activeIndex === 2 ? undefined : 'hidden'}>
-              <Card>
-                Test
-              </Card>
-          </div> */}
 
           <br></br>
 
@@ -357,8 +435,11 @@ export default function Home() {
               activeIndex < items.length - 1 && (
                 <Button
                   label={ activeIndex === 0 ? 'Get Started' : 'Next' }
-                  disabled={portfolioHoldings.length === 0} 
-                  onClick={() => setActiveIndex(activeIndex + 1)}
+                  disabled={
+                    portfolioHoldings.length === 0 ||
+                    portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0) !== 100
+                  } 
+                  onClick={onClickNext}
                 />
               )
             }

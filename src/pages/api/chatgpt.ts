@@ -20,6 +20,11 @@ export default async function handler(
     apiKey: process.env.OPENAI_API_KEY,
   });
   const openai = new OpenAIApi(configuration);
+
+  const message1 = `
+  
+  `;
+
   const response = await openai.createCompletion({
     model: "text-davinci-003",
     prompt: "Say this is a test",
