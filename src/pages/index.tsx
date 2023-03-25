@@ -10,6 +10,7 @@ import "primeflex/primeflex.css"
 
 import { Button } from 'primereact/button';
 import { Steps } from 'primereact/steps';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import React, { useEffect, useState } from 'react';
 import { MenuItem, MenuItemCommandEvent } from 'primereact/menuitem';
 import { Card } from 'primereact/card';
@@ -66,7 +67,8 @@ export default function Home() {
   const [investorRetirementAge, setInvestorRetirementAge] = useState<number | null>(null)
   const [investorRiskTolerance, setInvestorRiskTolerance] = useState<RiskTolerance | null>(null)
   const [investorGoals, setInvestorGoals] = useState<string | null>(null)
-  const [chatGptFeedback, setChatGptFeedback] = useState({})
+  const [chatGptFeedback, setChatGptFeedback] = useState<any>({})
+  const [chatGptFeedbackLoading, setChatGptFeedbackLoading] = useState<boolean>(true)
 
   const portfolioOptions = ['Manual', 'Import'];
   const [selectedPortfolioOption, setSelectedPortfolioOption] = useState(portfolioOptions[0]);
@@ -135,12 +137,11 @@ export default function Home() {
   const stockColumnTemplate = (stock: any) => {
       return (
         <div style={{display: "flex", alignItems: "center" }}>
-          <Image
+          <ImageWithFallback
             className='stock-logo mr-4'
             alt='Image of company logo'
             src={`https://storage.googleapis.com/iex/api/logos/${stock.ticker}.png`}
-            // onerror="this.onerror=null; this.src=''"
-            // onError={() => setSrc('/assets/ima ge-error.png')}
+            fallbackSrc='/missing-image.png'
             width={36}
             height={36}
           />
@@ -174,6 +175,7 @@ export default function Home() {
         setInvestorInfo(investorInfo);
         break;
       case items.length - 1:
+        setChatGptFeedbackLoading(true)
         const chatGptFeedbackRequest = {
           investor: {
             age: investorAge,
@@ -186,20 +188,27 @@ export default function Home() {
         fetch('api/chatgpt', {
           method: "POST",
           body: JSON.stringify(chatGptFeedbackRequest),
+          headers: {
+            "Content-Type": "application/json"
+          }
         })
           .then((response) => response.json())
           .then((data) => {
+            setChatGptFeedbackLoading(false)
             console.log(data);
+            setChatGptFeedback(data)
           })
           .catch((err) => {
               console.log(err.message);
           });
         break;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex])
 
   const footer = (
     <span
+      // TODO: show gray text if 0, and red if over 100 or negative
       style={{
         color: portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0) === 100 ?
           '#32a852' :
@@ -378,7 +387,7 @@ export default function Home() {
                       <div className="flex flex-wrap gap-3">
                           <div className="flex align-items-center">
                               <RadioButton inputId="csv" name="csv" value="CSV" onChange={(e) => {}} checked={true} />
-                              <label htmlFor="csv" className="ml-2">CSV/XLS</label>
+                              <label htmlFor="csv" className="ml-2">File Upload</label>
                           </div>
                           <div className="flex align-items-center">
                               <RadioButton inputId="connect-account" name="account" value="Account" onChange={(e) => {}} checked={false} />
@@ -388,11 +397,22 @@ export default function Home() {
                     </div>
                     <div>
                       {/* <p>Export your portfolio from your brokerage account and upload the file below.</p> */}
-                      <div style={{ fontSize: '0.75em'}}>Export your portfolio from your brokerage account and upload the file below.</div>
-                      <div style={{ fontSize: '0.75em'}} className='mb-3'>We currently only support the exports of <b>TDAmeritrade</b> & <b>Fidelity</b>, but aim to support more!</div>
+                      <div style={{ fontSize: '0.75em'}} className='mb-3'>
+                        Export your portfolio from your brokerage account and upload the file below.
+                        <br></br>
+                        We currently only support the exports of <b>TDAmeritrade</b> & <b>Fidelity</b>, but aim to support more!
+                      </div>
                       {/* <Button label="Upload"></Button> */}
                       {/* <Toast ref={toast}></Toast> */}
-                      <FileUpload mode="basic" chooseLabel='Upload' name="demo[]" url="/api/upload" accept="image/*" maxFileSize={1000000} onUpload={() => {}} />
+                      <FileUpload
+                        mode="basic"
+                        chooseLabel='Upload'
+                        name="demo[]"
+                        url="/api/upload"
+                        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                        maxFileSize={1000000}
+                        onUpload={() => {}}
+                      />
                     </div>
                     <div>
                       {/* <h2>Coming Soon!</h2> */}
@@ -468,24 +488,39 @@ export default function Home() {
 
           {/* FINAL STEP */}
           <div className={ activeIndex === items.length - 1 ? undefined : 'hidden'}>
-            <Accordion multiple activeIndex={[0,1]}>
-                <AccordionTab header="Is my portfolio diversified enough?">
-                    <small className="m-0">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                        Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                        commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-                        Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                    </small>
-                </AccordionTab>
-                <AccordionTab header="What other stocks/ETFS should I invest in?">
-                    <small className="m-0">
-                        Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa 
-                        quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas 
-                        sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. 
-                        Consectetur, adipisci velit, sed quia non numquam eius modi.
-                    </small>
-                </AccordionTab>
-            </Accordion>
+            {
+              chatGptFeedbackLoading && (
+                <>
+                  <ProgressSpinner style={{ color: '#6666ff'}} />
+                  <p>Getting Feedback! This may take a few seconds.</p>
+                </>
+              )
+            }
+            {
+              !chatGptFeedbackLoading && (
+                <Accordion multiple activeIndex={[0,1,2]}>
+                  <AccordionTab header="Is my portfolio diversified enough?">
+                      <small className="m-0">
+                          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+                          Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+                          commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+                          Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                      </small>
+                  </AccordionTab>
+                  <AccordionTab header="What other stocks/ETFS should I invest in?">  
+                      <small className="m-0"  style={{whiteSpace: "pre-line"}}>
+                      { chatGptFeedback.recommendedStocks?.content }
+                      {/* { chatGptFeedback.recommendedStocks?.text } */}
+                      </small>
+                  </AccordionTab>
+                  <AccordionTab header="Summary">
+                      <small className="m-0">
+                        { chatGptFeedback.generalPortfolioFeedback?.content }
+                      </small>
+                  </AccordionTab>
+                </Accordion>
+              )
+            }
           </div>
 
           <br></br>
@@ -514,8 +549,20 @@ export default function Home() {
 
         </div>
 
-        <Divider />
+        {/* <Divider /> */}
       </main>
+
+      {/* Banner Ad */}
+      <div className='text-center'>
+        {/* <Image
+          src='/placeholder-large-leaderboard-banner-ad.jpeg'
+          alt=''
+          width={960}
+          height={90}
+        /> */}
+      </div>
+
+      {/* Footer   */}
     </>
   )
 }
