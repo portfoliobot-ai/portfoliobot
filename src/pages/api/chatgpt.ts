@@ -14,25 +14,27 @@ export default async function handler(
   // const { body.number } = body;
   // const investorName = req.body.name;
   // const 
-  const { age, targetRetirementAge, stocks } = req.body
+  const { investor, holdings } = req.body
 
-  const configuration = new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-  const openai = new OpenAIApi(configuration);
+  console.log('REQUEST: ', req.body)
 
-  const message1 = `
+  // const configuration = new Configuration({
+  //   apiKey: process.env.OPENAI_API_KEY,
+  // });
+  // const openai = new OpenAIApi(configuration);
+
+  // const message1 = `
   
-  `;
+  // `;
 
-  const response = await openai.createCompletion({
-    model: "text-davinci-003",
-    prompt: "Say this is a test",
-    temperature: 0,
-    max_tokens: 7,
-  });
+  // const response = await openai.createCompletion({
+  //   model: "text-davinci-003",
+  //   prompt: "Say this is a test",
+  //   temperature: 0,
+  //   max_tokens: 7,
+  // });
 
-  console.log("RESPONSE", response)
+  // console.log("RESPONSE", response)
 
   res.status(200).json({ feedback: 'John Doe' })
 }

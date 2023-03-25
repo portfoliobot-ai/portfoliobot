@@ -14,8 +14,6 @@ import React, { useEffect, useState } from 'react';
 import { MenuItem, MenuItemCommandEvent } from 'primereact/menuitem';
 import { Card } from 'primereact/card';
 import { SelectButton } from 'primereact/selectbutton';
-import { Fieldset } from 'primereact/fieldset';
-import { InputText } from 'primereact/inputtext';
 import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -24,14 +22,19 @@ import { Row } from 'primereact/row';
 import { AutoComplete } from 'primereact/autocomplete';
 import { Accordion, AccordionTab } from 'primereact/accordion';
 import { Divider } from 'primereact/divider';
-import { Chips } from 'primereact/chips';
 import { Badge } from 'primereact/badge';
 import { RadioButton } from 'primereact/radiobutton';
 import { FileUpload } from 'primereact/fileupload';
-
-import { InputNumber } from 'primereact/inputnumber';
+import { InputTextarea } from 'primereact/inputtextarea';
+import { InputNumber, InputNumberChangeEvent } from 'primereact/inputnumber';
         
 import Typewriter from 'typewriter-effect';
+import ImageWithFallback from '@/components/ImageWithFallback';
+import { InputText } from 'primereact/inputtext';
+import { RiskTolerance } from '@/models/RiskTolerance.enum';
+
+// TODO: Remove any types
+// TODO: Refactor into smaller components
 
 export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -57,13 +60,17 @@ export default function Home() {
     }
   ]
 
-  const [investorInfo, setInvestorInfo] = useState(null)
+  const [investorInfo, setInvestorInfo] = useState<any>(null)
+
+  const [investorAge, setInvestorAge] = useState<number | null>(null)
+  const [investorRetirementAge, setInvestorRetirementAge] = useState<number | null>(null)
+  const [investorRiskTolerance, setInvestorRiskTolerance] = useState<RiskTolerance | null>(null)
+  const [investorGoals, setInvestorGoals] = useState<string | null>(null)
   const [chatGptFeedback, setChatGptFeedback] = useState({})
 
   const portfolioOptions = ['Manual', 'Import'];
   const [selectedPortfolioOption, setSelectedPortfolioOption] = useState(portfolioOptions[0]);
 
-  const [selectedRiskTolerance, setSelectedRiskTolerance] = useState();
   const riskTolerances = [
       { name: 'Conservative', code: 'Conservative' },
       { name: 'Moderate', code: 'Moderate' },
@@ -84,23 +91,9 @@ export default function Home() {
       .catch((err) => {
           console.log(err.message);
       });
-      // setItems([...Array(10).keys()].map(item => event.query + '-' + item));
   }
 
-  // const onSelectStock = (selectedStocks: any) => {
-  //   console.log("SELECTED STOCKS: ", selectedStocks)
-  //   const holdings = selectedStocks.map((selectedStock: any) => {
-  //     return {
-  //       ticker: selectedStock.ticker,
-  //       companyName: selectedStock.securityName,
-  //       allocation: 0,
-  //     }
-  //   })
-
-  //   setPortfolioHoldings(holdings)
-  // }
   useEffect(() => {
-    console.log('SELECTED: ', stockSearchSelectedItems)
     if (stockSearchSelectedItems && stockSearchSelectedItems?.length > 0) {
       const holdings = stockSearchSelectedItems.map((selectedStock: any) => {
         return {
@@ -114,17 +107,17 @@ export default function Home() {
   
       setPortfolioHoldings([...portfolioHoldings, ...holdings])
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stockSearchSelectedItems])
 
   const stockSearchTemplate = (stock: any) => {
     return (
       <div style={{display: "flex", alignItems: "center" }}>
-        <Image
-          className='stock-logo mr-2'
+        <ImageWithFallback
           alt='Image of company logo'
           src={`https://storage.googleapis.com/iex/api/logos/${stock.symbol}.png`}
-          // onerror="this.onerror=null; this.src=''"
-          // onError={() => setSrc('/assets/ima ge-error.png')}
+          fallbackSrc='/missing-image.png'
+          className='stock-logo mr-2'
           width={24}
           height={24}
         />
@@ -139,7 +132,7 @@ export default function Home() {
     )
   }
 
-  const stockColumnTemplate = (stock) => {
+  const stockColumnTemplate = (stock: any) => {
       return (
         <div style={{display: "flex", alignItems: "center" }}>
           <Image
@@ -161,25 +154,49 @@ export default function Home() {
 
   const onClickNext = () => {
     setActiveIndex(activeIndex + 1)
+  }
 
+  useEffect(() => {
     switch (activeIndex) {
       case 0:
-        setInvestorInfo(null);
         break;
       case 1:
+        if (!investorAge || !investorRetirementAge) {
+
+        }
+        const investorInfo = {
+          age: investorAge,
+          retirementAge: investorRetirementAge,
+          riskTolerance: investorRiskTolerance,
+          investmentGoals: investorGoals,
+        }
+
+        setInvestorInfo(investorInfo);
         break;
       case items.length - 1:
-        // fetch('api/chatgpt/')
-        // .then((response) => response.json())
-        // .then((data) => {
-        //    console.log(data);
-        // })
-        // .catch((err) => {
-        //     console.log(err.message);
-        // });
+        const chatGptFeedbackRequest = {
+          investor: {
+            age: investorAge,
+            retirementAge: investorRetirementAge,
+            riskTolerance: investorRiskTolerance,
+            investmentGoals: investorGoals,
+          },
+          portfolioHoldings
+        }
+        fetch('api/chatgpt', {
+          method: "POST",
+          body: JSON.stringify(chatGptFeedbackRequest),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data);
+          })
+          .catch((err) => {
+              console.log(err.message);
+          });
         break;
     }
-  }
+  }, [activeIndex])
 
   const footer = (
     <span
@@ -203,12 +220,12 @@ export default function Home() {
       </ColumnGroup>
   );
 
-  const removePortfolioHolding = (holding) => {
+  const removePortfolioHolding = (holding: any) => {
     const updatedHoldings = portfolioHoldings.filter((val) => val.ticker !== holding.ticker);
     setPortfolioHoldings(updatedHoldings);
   }
 
-  const tableActionsCellTemplate = (rowData) => {
+  const tableActionsCellTemplate = (rowData: any) => {
     return (
       <React.Fragment>
         <div className='text-center'>
@@ -225,12 +242,17 @@ export default function Home() {
     );
   };
 
-  const allocationEditor = (options) => {
-    return <InputNumber value={options.value} onValueChange={(e) => options.editorCallback(e.value)} />;
+  const allocationEditor = (options: any) => {
+    return (
+      <div className='p-inputgroup'>
+        <InputNumber value={options.value} onValueChange={(e) => options.editorCallback(e.value)} />
+        <span className="p-inputgroup-addon">%</span>
+      </div>
+    );
   };
 
   // TODO: use useCallback
-  const onPortfolioAllocationCellEditComplete = (e) => {
+  const onPortfolioAllocationCellEditComplete = (e: any) => {
     let { rowData, newValue, field, originalEvent: event } = e;
 
     // console.log("FIELD: ", field)
@@ -268,7 +290,7 @@ export default function Home() {
         <div className={styles.description}>
 
           {/* HEADER SECTION */}
-          { activeIndex === 0 && (
+          { (activeIndex === 0 || activeIndex === 1) && (
             <div className='mb-5 text-center'>
               <h1>Are your investments
                 <Typewriter
@@ -384,7 +406,7 @@ export default function Home() {
           {/* SECOND STEP */}
           <div className={ activeIndex === 1 ? 'step' : 'hidden'}>
             <Card>
-              <div className="p-inputgroup">
+              {/* <div className="p-inputgroup">
                   <InputNumber placeholder="Your Age" />
               </div>
               <div className="p-inputgroup">
@@ -393,6 +415,51 @@ export default function Home() {
               <div className="p-inputgroup">
                 <Dropdown value={selectedRiskTolerance} onChange={(e) => setSelectedRiskTolerance(e.value)} options={riskTolerances} optionLabel="name" 
                   placeholder="Risk Tolerance" className="w-full md:w-14rem" />
+              </div> */}
+              <div className="card flex flex-column md:flex-row gap-3 mb-3">
+                <div className="p-inputgroup flex-1">
+                    {/* <span className="p-inputgroup-addon">
+                        <i className="pi pi-user"></i>
+                    </span> */}
+                    <InputNumber
+                      placeholder="Age"
+                      onChange={(e: InputNumberChangeEvent) => setInvestorAge(e.value)}
+                    />
+                </div>
+
+                <div className="p-inputgroup flex-1">
+                    {/* <span className="p-inputgroup-addon">$</span>
+                    <InputNumber placeholder="Price" />
+                    <span className="p-inputgroup-addon">.00</span> */}
+                    {/* <label htmlFor="target-retirement-age">Target Retirement Age</label> */}
+                    <InputNumber
+                      id="retirement-age"
+                      placeholder="Retirement Age"
+                      onChange={(e: InputNumberChangeEvent) => setInvestorRetirementAge(e.value)}
+                    />
+                </div>
+
+                <div className="p-inputgroup flex-1">
+                    {/* <span className="p-inputgroup-addon">www</span>
+                    <InputText placeholder="Website" /> */}
+                  <Dropdown
+                    value={investorRiskTolerance}
+                    onChange={(e) => setInvestorRiskTolerance(e.value)}
+                    options={riskTolerances}
+                    optionLabel="name" 
+                    placeholder="Risk Tolerance"  />
+                </div>
+              </div>
+              <div className="card flex flex-column md:flex-row gap-3">
+                <div className="p-inputgroup flex-1">
+                  <InputTextarea
+                    placeholder="Investment Goal(s)"
+                    maxLength={255}
+                    rows={4}
+                    cols={30}
+                    onChange={(e) => setInvestorGoals(e.target.value)}
+                  />
+                </div>
               </div>
             </Card>
           </div>
