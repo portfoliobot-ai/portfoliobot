@@ -28,6 +28,8 @@ import { RadioButton } from 'primereact/radiobutton';
 import { FileUpload } from 'primereact/fileupload';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { InputNumber, InputNumberChangeEvent } from 'primereact/inputnumber';
+import { Skeleton } from 'primereact/skeleton';
+        
         
 import Typewriter from 'typewriter-effect';
 import ImageWithFallback from '@/components/ImageWithFallback';
@@ -488,39 +490,54 @@ export default function Home() {
 
           {/* FINAL STEP */}
           <div className={ activeIndex === items.length - 1 ? undefined : 'hidden'}>
-            {
+            {/* {
               chatGptFeedbackLoading && (
                 <>
                   <ProgressSpinner style={{ color: '#6666ff'}} />
                   <p>Getting Feedback! This may take a few seconds.</p>
                 </>
               )
-            }
-            {
-              !chatGptFeedbackLoading && (
-                <Accordion multiple activeIndex={[0,1,2]}>
-                  <AccordionTab header="Is my portfolio diversified enough?">
-                      <small className="m-0">
-                          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-                          Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                          commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-                          Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-                      </small>
-                  </AccordionTab>
-                  <AccordionTab header="What other stocks/ETFS should I invest in?">  
+            } */}
+
+            <Accordion multiple activeIndex={[0,1,2]}>
+              <AccordionTab header="Is my portfolio diversified enough?">
+                {
+                  !chatGptFeedback && <Skeleton height="2rem" className="mb-2" />
+                }
+                {
+                  chatGptFeedback && (
+                    <small className="m-0">
+                        
+                    </small>
+                  )
+                }
+              </AccordionTab>
+              <AccordionTab header="What other stocks/ETFS should I invest in?">  
+                  {
+                    !chatGptFeedback && <Skeleton height="2rem" className="mb-2" />
+                  }
+                  {
+                    chatGptFeedback && (
                       <small className="m-0"  style={{whiteSpace: "pre-line"}}>
                       { chatGptFeedback.recommendedStocks?.content }
                       {/* { chatGptFeedback.recommendedStocks?.text } */}
                       </small>
-                  </AccordionTab>
-                  <AccordionTab header="Summary">
-                      <small className="m-0">
-                        { chatGptFeedback.generalPortfolioFeedback?.content }
-                      </small>
-                  </AccordionTab>
-                </Accordion>
-              )
-            }
+                    )
+                  }
+              </AccordionTab>
+              <AccordionTab header="Summary">
+                {
+                  !chatGptFeedback && <Skeleton height="2rem" className="mb-2" />
+                }
+                {
+                  chatGptFeedback && (
+                    <small className="m-0">
+                        
+                    </small>
+                  )
+                }
+              </AccordionTab>
+            </Accordion>
           </div>
 
           <br></br>

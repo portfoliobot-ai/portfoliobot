@@ -62,19 +62,12 @@ export default async function handler(
   });
   const openai = new OpenAIApi(configuration);
 
-
-  // const completion = await openai.createCompletion({
-  //   model: "text-davinci-003",
-  //   prompt: portfolioStockRecommendations,
-  //   temperature: 0,
-  //   max_tokens: 7,
-  // });
   const completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     messages: [
       // { role: "user", content: portfolioSummaryMessage },
       // { role: 'user', content: portfolioRiskAssessmentMessage },
-      { role: 'system', content: 'You are a advisor, providing financial advice for investors.' },
+      { role: 'system', content: 'You are a financial advisor, providing financial advice for my investment portfolio.' },
       { role: 'user', content: portfolioStockRecommendations }
     ],
   });
