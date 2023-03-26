@@ -12,13 +12,14 @@ export default async function handler(
 ) {
   const { investor, portfolioHoldings } = req.body
 
-  const holdingsToAllocationString = req.body.portfolioHoldings.reduce((acc, stock) => {
+  // TODO: add type for stock
+  const holdingsToAllocationString = req.body.portfolioHoldings.reduce((acc: string, stock: any) => {
     return acc + `${stock.ticker}: ${stock.allocation}%\n`
   }, '')
 
   console.log(holdingsToAllocationString)
 
-  // TODO: riskTolerance not working
+  // TODO: riskTolerance being treated as object not string
   const portfolioSummaryMessage = `
     My stock portfolio consists of the following: \n
       ${holdingsToAllocationString}
