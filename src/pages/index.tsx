@@ -49,34 +49,29 @@ export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
   const toast = useRef<any>(null);
   const items: MenuItem[] = [
-    {
-        label: 'Portfolio',
-        command: (event: MenuItemCommandEvent) => {
-            // toast.current.show({ severity: 'info', summary: 'Third Step', detail: event.item.label });
-        }
-    },
-    {
-        label: 'Investor Info',
-        command: (event: MenuItemCommandEvent) => {
-            // toast.current.show({ severity: 'info', summary: 'First Step', detail: event.item.label });
-        }
-    },
-    {
-        label: 'AI Feedback',
-        command: (event: MenuItemCommandEvent) => {
-            // toast.current.show({ severity: 'info', summary: 'Last Step', detail: event.item.label });
-        }
-    }
+    { label: 'Portfolio' },
+    { label: 'Investor Info' },
+    { label: 'AI Feedback' }
   ]
 
-  const [investorInfo, setInvestorInfo] = useState<any>(null)
-
+  // User Data
   const [investorAge, setInvestorAge] = useState<number | null>(null)
   const [investorRetirementAge, setInvestorRetirementAge] = useState<number | null>(null)
-  const [investorRiskTolerance, setInvestorRiskTolerance] = useState<RiskTolerance | null>(null)
+  const [investorRiskTolerance, setInvestorRiskTolerance] = useState<string>('')
   const [investorGoals, setInvestorGoals] = useState<string | null>(null)
-  const [chatGptFeedback, setChatGptFeedback] = useState<any>(null)
+
+  // ChatGPT Response Data
+  const [recommendedStocks, setRecommendedStocks] = useState<string>('')
+  const [diversificationFeedback, setDiversificationFeedback] = useState<string>('')
+  const [riskAssessment, setRiskAssessment] = useState<string>('')
+  const [feedbackSummary, setFeedbackSummary] = useState<string>('')
+
+  
   const [chatGptFeedbackLoading, setChatGptFeedbackLoading] = useState<boolean>(true)
+  const [recommendedStocksLoading, setRecommendedStocksLoading] = useState<boolean>(true)
+  const [diversificationLoading, setDiversificationLoading] = useState<boolean>(true)
+  const [riskAssessmentLoading, setRiskAssessmentLoading] = useState<boolean>(true)
+  const [feedbackSummaryLoading, setFeedbackSummaryLoading] = useState<boolean>(true)
 
   const portfolioOptions = ['Manual', 'Import'];
   const [selectedPortfolioOption, setSelectedPortfolioOption] = useState(portfolioOptions[0]);
@@ -86,6 +81,7 @@ export default function Home() {
       { name: 'Moderate', code: 'Moderate' },
       { name: 'Aggresive', code: 'Aggresive' },
   ];
+  const [selectedRiskTolerance, setSelectedRiskTolerance] = useState<any>()
 
   const [stockSearchSelectedItems, setStockSearchSelectedItems] = useState([]);
   const [stockSearchSuggestions, setStockSearchSuggestions] = useState([]);
@@ -173,19 +169,30 @@ export default function Home() {
         if (!investorAge || !investorRetirementAge) {
 
         }
-        const investorInfo = {
-          age: investorAge,
-          retirementAge: investorRetirementAge,
-          riskTolerance: investorRiskTolerance,
-          investmentGoals: investorGoals,
-        }
+        // const investorInfo = {
+        //   age: investorAge,
+        //   retirementAge: investorRetirementAge,
+        //   riskTolerance: investorRiskTolerance,
+        //   investmentGoals: investorGoals,
+        // }
 
-        setInvestorInfo(investorInfo);
+        // setInvestorInfo(investorInfo);
         break;
       case items.length - 1:
         setChatGptFeedbackLoading(true)
 
-        toast.current.show({ severity: 'info', summary: 'Getting Feedback! ', position: 'right', detail: 'This may take a few seconds.', sticky: true });
+        setRecommendedStocksLoading(true)
+        setDiversificationLoading(true)
+        setRiskAssessmentLoading(true)
+        setFeedbackSummaryLoading(true)
+
+        toast.current.show({
+          severity: 'info',
+          summary: 'Getting Feedback! ',
+          position: 'bottom-center',
+          detail: 'This may take a few seconds.',
+          sticky: true
+        });
 
         const chatGptFeedbackRequest = {
           investor: {
@@ -196,7 +203,8 @@ export default function Home() {
           },
           portfolioHoldings
         }
-        fetch('api/chatgpt', {
+
+        fetch('api/chatgpt/recommendedStocks', {
           method: "POST",
           body: JSON.stringify(chatGptFeedbackRequest),
           headers: {
@@ -205,17 +213,90 @@ export default function Home() {
         })
           .then((response) => response.json())
           .then((data) => {
-            setChatGptFeedbackLoading(false)
-            setChatGptFeedback(data)
+            setRecommendedStocks(data.recommendedStocks)
+            setRecommendedStocksLoading(false)
             toast.current.clear()
           })
           .catch((err) => {
-              console.log(err.message);
+            // TODO: Show toast
+            setChatGptFeedbackLoading(false)
           });
+      
+        fetch('api/chatgpt/diversification', {
+          method: "POST",
+          body: JSON.stringify(chatGptFeedbackRequest),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            setDiversificationFeedback(data.diversification)
+            setDiversificationLoading(false)
+            toast.current.clear()
+          })
+          .catch((err) => {
+              // TODO: Show toast
+              setChatGptFeedbackLoading(false)
+          });
+
+        fetch('api/chatgpt/riskAssessment', {
+          method: "POST",
+          body: JSON.stringify(chatGptFeedbackRequest),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            setRiskAssessment(data.riskAssessment)
+            setRiskAssessmentLoading(false)
+            toast.current.clear()
+          })
+          .catch((err) => {
+              // TODO: Show toast
+              setChatGptFeedbackLoading(false)
+          });
+
+        fetch('api/chatgpt/summary', {
+          method: "POST",
+          body: JSON.stringify(chatGptFeedbackRequest),
+          headers: {
+            "Content-Type": "application/json"
+          }
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            setFeedbackSummary(data.feedbackSummary)
+            setFeedbackSummaryLoading(false)
+            toast.current.clear()
+          })
+          .catch((err) => {
+              // TODO: Show toast
+              setChatGptFeedbackLoading(false)
+          });
+        
+        
         break;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex])
+
+  useEffect(() => {
+    if (
+      !recommendedStocksLoading &&
+      !diversificationLoading &&
+      !riskAssessmentLoading &&
+      !feedbackSummaryLoading
+    ) {
+      setChatGptFeedbackLoading(false)
+    }
+  }, [
+    recommendedStocksLoading,
+    diversificationLoading,
+    riskAssessmentLoading,
+    feedbackSummaryLoading,
+  ])
 
   const footer = (
     <span
@@ -456,11 +537,14 @@ export default function Home() {
                 </div>
                 <div className="p-inputgroup flex-1">
                   <Dropdown
-                    value={investorRiskTolerance}
-                    onChange={(e) => setInvestorRiskTolerance(e.value)}
+                    value={selectedRiskTolerance}
+                    onChange={(e) => {
+                      setSelectedRiskTolerance(e.value)
+                      setInvestorRiskTolerance(e.value.name)
+                    }}
                     options={riskTolerances}
                     optionLabel="name" 
-                    placeholder="Risk Tolerance"  />
+                    placeholder="Risk Tolerance" />
                 </div>
               </div>
               <div className="card flex flex-column md:flex-row gap-3">
@@ -489,36 +573,56 @@ export default function Home() {
               )
             } */}
 
-            <Accordion multiple activeIndex={[0,1,2]}>
+            <Accordion multiple activeIndex={[0,1,2,3]}>
               <AccordionTab header="Is my portfolio diversified enough?">
                 {
-                  chatGptFeedbackLoading && (
+                  diversificationLoading && (
                     <div className="w-full p-3">
                       <Skeleton height="2rem" className="mb-2" />
                     </div>
                   )
                 }
                 {
-                  !chatGptFeedbackLoading && (
-                    <small className="m-0">
-                        
+                  !diversificationLoading && (
+                    <small className="m-0"  style={{whiteSpace: "pre-line"}}>
+                      <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
+                        { diversificationFeedback }
+                      </StyleMatchingStrings>
                     </small>
                   )
                 }
               </AccordionTab>
               <AccordionTab header="What other stocks/ETFS should I invest in?">  
                   {
-                    chatGptFeedbackLoading && (
+                    recommendedStocksLoading && (
                       <div className="w-full p-3">
                         <Skeleton height="2rem" className="mb-2" />
                       </div>
                     )
                   }
                   {
-                    !chatGptFeedbackLoading && (
+                    !recommendedStocksLoading && (
                       <small className="m-0"  style={{whiteSpace: "pre-line"}}>
                         <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
-                          { chatGptFeedback.recommendedStocks?.content }
+                          { recommendedStocks }
+                        </StyleMatchingStrings>
+                      </small>
+                    )
+                  }
+              </AccordionTab>
+              <AccordionTab header="Are my stocks too risky or too conservative?">  
+                  {
+                    riskAssessmentLoading && (
+                      <div className="w-full p-3">
+                        <Skeleton height="2rem" className="mb-2" />
+                      </div>
+                    )
+                  }
+                  {
+                    !riskAssessmentLoading && (
+                      <small className="m-0"  style={{whiteSpace: "pre-line"}}>
+                        <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
+                          { riskAssessment }
                         </StyleMatchingStrings>
                       </small>
                     )
@@ -526,16 +630,18 @@ export default function Home() {
               </AccordionTab>
               <AccordionTab header="Summary">
                 {
-                  chatGptFeedbackLoading && (
+                  feedbackSummaryLoading && (
                     <div className="w-full p-3">
                       <Skeleton height="2rem" className="mb-2" />
                     </div>
                   )
                 }
                 {
-                  !chatGptFeedbackLoading && (
-                    <small className="m-0">
-                        
+                  !feedbackSummaryLoading && (
+                    <small className="m-0"  style={{whiteSpace: "pre-line"}}>
+                      <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
+                        { feedbackSummary }
+                      </StyleMatchingStrings>
                     </small>
                   )
                 }
