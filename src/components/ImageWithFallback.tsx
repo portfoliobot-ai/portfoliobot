@@ -10,6 +10,11 @@ interface ImageFallbackProps {
   height: number;
 }
 
+/**
+ * 
+ * @param param0 
+ * @returns 
+ */
 export default function ImageWithFallback({ src, alt, fallbackSrc, className, width, height, ...rest }: ImageFallbackProps) {
   const [imgSrc, set_imgSrc] = useState(src);
 

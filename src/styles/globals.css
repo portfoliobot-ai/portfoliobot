@@ -31,6 +31,10 @@ a {
   text-decoration: none;
 }
 
+footer {
+  font-family: Poppins, sans-serif;
+}
+
 .hidden { display:none; }
 
 /** typewriter-effect overrides */

@@ -37,16 +37,8 @@ export default async function handler(
   //     ${holdingsToAllocationString}
   // `
   const portfolioStockRecommendations = `
-    Is this a good stock portfolio for a 29 year old with a high risk tolerance who aims to retire by 50? What \n 
-    MSFT: 20%
-    AAPL: 20%
-    AMZN: 15%
-    TSLA: 15%
-    NVDA: 10%
-    JNJ: 5%
-    JPM: 5%
-    V: 5%
-    MA: 5% \n
+    Is this a good stock portfolio for a ${investor.age} year old investor with a high risk tolerance who aims to retire by ${investor.retirementAge}? \n 
+    ${holdingsToAllocationString}
     Could you recommend some stocks to add?
   `
 
@@ -65,10 +57,10 @@ export default async function handler(
   const completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     messages: [
-      // { role: "user", content: portfolioSummaryMessage },
-      // { role: 'user', content: portfolioRiskAssessmentMessage },
       { role: 'system', content: 'You are a financial advisor, providing financial advice for my investment portfolio.' },
+      // { role: 'user', content: portfolioRiskAssessmentMessage },
       { role: 'user', content: portfolioStockRecommendations }
+      // { role: "user", content: portfolioSummaryMessage },
     ],
   });
 

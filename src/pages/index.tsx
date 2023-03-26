@@ -11,9 +11,12 @@ import "primeflex/primeflex.css"
 import { Button } from 'primereact/button';
 import { Steps } from 'primereact/steps';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MenuItem, MenuItemCommandEvent } from 'primereact/menuitem';
 import { Card } from 'primereact/card';
+
+import { Toast } from 'primereact/toast';
+        
 import { SelectButton } from 'primereact/selectbutton';
 import { Dropdown } from 'primereact/dropdown';
 import { DataTable } from 'primereact/datatable';
@@ -23,6 +26,7 @@ import { Row } from 'primereact/row';
 import { AutoComplete } from 'primereact/autocomplete';
 import { Accordion, AccordionTab } from 'primereact/accordion';
 import { Divider } from 'primereact/divider';
+import { Message } from 'primereact/message';
 import { Badge } from 'primereact/badge';
 import { RadioButton } from 'primereact/radiobutton';
 import { FileUpload } from 'primereact/fileupload';
@@ -35,13 +39,15 @@ import Typewriter from 'typewriter-effect';
 import ImageWithFallback from '@/components/ImageWithFallback';
 import { InputText } from 'primereact/inputtext';
 import { RiskTolerance } from '@/models/RiskTolerance.enum';
+import StyleMatchingStrings from '@/components/StyleMatchingStrings';
+import { allStockTickers } from '@/resources/stock-tickers';
 
 // TODO: Remove any types
 // TODO: Refactor into smaller components
 
 export default function Home() {
   const [activeIndex, setActiveIndex] = useState(0);
-    // const toast = useRef(null);
+  const toast = useRef<any>(null);
   const items: MenuItem[] = [
     {
         label: 'Portfolio',
@@ -69,7 +75,7 @@ export default function Home() {
   const [investorRetirementAge, setInvestorRetirementAge] = useState<number | null>(null)
   const [investorRiskTolerance, setInvestorRiskTolerance] = useState<RiskTolerance | null>(null)
   const [investorGoals, setInvestorGoals] = useState<string | null>(null)
-  const [chatGptFeedback, setChatGptFeedback] = useState<any>({})
+  const [chatGptFeedback, setChatGptFeedback] = useState<any>(null)
   const [chatGptFeedbackLoading, setChatGptFeedbackLoading] = useState<boolean>(true)
 
   const portfolioOptions = ['Manual', 'Import'];
@@ -178,6 +184,9 @@ export default function Home() {
         break;
       case items.length - 1:
         setChatGptFeedbackLoading(true)
+
+        toast.current.show({ severity: 'info', summary: 'Getting Feedback! ', position: 'right', detail: 'This may take a few seconds.', sticky: true });
+
         const chatGptFeedbackRequest = {
           investor: {
             age: investorAge,
@@ -197,8 +206,8 @@ export default function Home() {
           .then((response) => response.json())
           .then((data) => {
             setChatGptFeedbackLoading(false)
-            console.log(data);
             setChatGptFeedback(data)
+            toast.current.clear()
           })
           .catch((err) => {
               console.log(err.message);
@@ -296,6 +305,8 @@ export default function Home() {
         <Badge className='ml-2' value="BETA" severity="warning"></Badge>
       </div>
 
+      <Toast ref={toast} />
+
       <main className={styles.main}>
 
         <div className={styles.description}>
@@ -319,7 +330,7 @@ export default function Home() {
               </h1>
               <br></br>
               <p className='homepage-secondary-header'>
-                Get <span className='emphasized'>AI-driven</span> feedback on your stock portfolio in minutes
+                Get <span className='emphasized'>AI-driven</span> feedback on your stock portfolio in minutes <span className='emphasized'> for free</span>
               </p>
             </div>
           )}
@@ -330,7 +341,6 @@ export default function Home() {
               model={items}
               activeIndex={activeIndex}
               onSelect={(e) => setActiveIndex(e.index)}
-              readOnly={false}
             />
           </div>
 
@@ -360,7 +370,9 @@ export default function Home() {
                       />
                     </div>
 
-                    <div style={{ fontSize: '0.7em'}} className='ml-2 mb-3'><a href="https://iexcloud.io">Data provided by IEX Cloud</a></div>
+                    <div style={{ fontSize: '0.7em'}} className='ml-2 mb-3'>
+                      <a href="https://iexcloud.io">Data provided by IEX Cloud</a>
+                    </div>
 
                     <DataTable
                       value={portfolioHoldings}
@@ -428,42 +440,21 @@ export default function Home() {
           {/* SECOND STEP */}
           <div className={ activeIndex === 1 ? 'step' : 'hidden'}>
             <Card>
-              {/* <div className="p-inputgroup">
-                  <InputNumber placeholder="Your Age" />
-              </div>
-              <div className="p-inputgroup">
-                  <InputNumber placeholder="Target Retirement Age" />
-              </div>
-              <div className="p-inputgroup">
-                <Dropdown value={selectedRiskTolerance} onChange={(e) => setSelectedRiskTolerance(e.value)} options={riskTolerances} optionLabel="name" 
-                  placeholder="Risk Tolerance" className="w-full md:w-14rem" />
-              </div> */}
               <div className="card flex flex-column md:flex-row gap-3 mb-3">
                 <div className="p-inputgroup flex-1">
-                    {/* <span className="p-inputgroup-addon">
-                        <i className="pi pi-user"></i>
-                    </span> */}
                     <InputNumber
                       placeholder="Age"
                       onChange={(e: InputNumberChangeEvent) => setInvestorAge(e.value)}
                     />
                 </div>
-
                 <div className="p-inputgroup flex-1">
-                    {/* <span className="p-inputgroup-addon">$</span>
-                    <InputNumber placeholder="Price" />
-                    <span className="p-inputgroup-addon">.00</span> */}
-                    {/* <label htmlFor="target-retirement-age">Target Retirement Age</label> */}
                     <InputNumber
                       id="retirement-age"
                       placeholder="Retirement Age"
                       onChange={(e: InputNumberChangeEvent) => setInvestorRetirementAge(e.value)}
                     />
                 </div>
-
                 <div className="p-inputgroup flex-1">
-                    {/* <span className="p-inputgroup-addon">www</span>
-                    <InputText placeholder="Website" /> */}
                   <Dropdown
                     value={investorRiskTolerance}
                     onChange={(e) => setInvestorRiskTolerance(e.value)}
@@ -492,20 +483,23 @@ export default function Home() {
           <div className={ activeIndex === items.length - 1 ? undefined : 'hidden'}>
             {/* {
               chatGptFeedbackLoading && (
-                <>
-                  <ProgressSpinner style={{ color: '#6666ff'}} />
-                  <p>Getting Feedback! This may take a few seconds.</p>
-                </>
+                <div className="card flex w-full justify-content-center mb-2">
+                  <Message text="Getting your feedback! This may take a few seconds." />
+                </div>
               )
             } */}
 
             <Accordion multiple activeIndex={[0,1,2]}>
               <AccordionTab header="Is my portfolio diversified enough?">
                 {
-                  !chatGptFeedback && <Skeleton height="2rem" className="mb-2" />
+                  chatGptFeedbackLoading && (
+                    <div className="w-full p-3">
+                      <Skeleton height="2rem" className="mb-2" />
+                    </div>
+                  )
                 }
                 {
-                  chatGptFeedback && (
+                  !chatGptFeedbackLoading && (
                     <small className="m-0">
                         
                     </small>
@@ -514,23 +508,32 @@ export default function Home() {
               </AccordionTab>
               <AccordionTab header="What other stocks/ETFS should I invest in?">  
                   {
-                    !chatGptFeedback && <Skeleton height="2rem" className="mb-2" />
+                    chatGptFeedbackLoading && (
+                      <div className="w-full p-3">
+                        <Skeleton height="2rem" className="mb-2" />
+                      </div>
+                    )
                   }
                   {
-                    chatGptFeedback && (
+                    !chatGptFeedbackLoading && (
                       <small className="m-0"  style={{whiteSpace: "pre-line"}}>
-                      { chatGptFeedback.recommendedStocks?.content }
-                      {/* { chatGptFeedback.recommendedStocks?.text } */}
+                        <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
+                          { chatGptFeedback.recommendedStocks?.content }
+                        </StyleMatchingStrings>
                       </small>
                     )
                   }
               </AccordionTab>
               <AccordionTab header="Summary">
                 {
-                  !chatGptFeedback && <Skeleton height="2rem" className="mb-2" />
+                  chatGptFeedbackLoading && (
+                    <div className="w-full p-3">
+                      <Skeleton height="2rem" className="mb-2" />
+                    </div>
+                  )
                 }
                 {
-                  chatGptFeedback && (
+                  !chatGptFeedbackLoading && (
                     <small className="m-0">
                         
                     </small>
@@ -580,6 +583,10 @@ export default function Home() {
       </div>
 
       {/* Footer   */}
+      <footer className='text-center m-2'>
+        <Divider />
+        <small className='emphasized'>&copy; Copyright {new Date().getFullYear()} PortfolioBot</small>
+      </footer>
     </>
   )
 }
