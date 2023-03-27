@@ -41,11 +41,20 @@ import { InputText } from 'primereact/inputtext';
 import { RiskTolerance } from '@/models/RiskTolerance.enum';
 import StyleMatchingStrings from '@/components/StyleMatchingStrings';
 import { allStockTickers } from '@/resources/stock-tickers';
+import generatePortfolioFeedbackPDF from '@/utils/generatePortfolioFeedbackPdf';
+import jsPDF from 'jspdf';
 
 // TODO: Remove any types
 // TODO: Refactor into smaller components
 
 export default function Home() {
+  // const doc = new jsPDF({
+  //   format: "a4",
+  //   unit: "px"
+  // });
+
+  // const feedbackSectionRef = useRef<any>(null);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const toast = useRef<any>(null);
   const items: MenuItem[] = [
@@ -158,7 +167,32 @@ export default function Home() {
   };
 
   const onClickNext = () => {
-    setActiveIndex(activeIndex + 1)
+    if (
+      portfolioHoldings.length === 0 ||
+      portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0) !== 100 ||
+      ( activeIndex === 1 && !validateInvestorInfoForm())
+    ) {
+      // Since we disabled the "Next" button if anyhting is invalid, this shouldn't show.
+      // Still, it's good to good to have in case a user for some reason removed the disabled attribute
+      // from the button.
+      toast.current.show({
+        severity: 'info',
+        summary: 'Missing Info',
+        position: 'bottom',
+        detail: 'Please fill in all required fields.',
+        sticky: true
+      });
+    } else {
+      setActiveIndex(activeIndex + 1)
+    }
+  }
+
+  const validateInvestorInfoForm = (): boolean => {
+    if (!investorAge || !investorRetirementAge || !investorRiskTolerance) {
+        return false
+    }
+
+    return true
   }
 
   useEffect(() => {
@@ -166,17 +200,6 @@ export default function Home() {
       case 0:
         break;
       case 1:
-        if (!investorAge || !investorRetirementAge) {
-
-        }
-        // const investorInfo = {
-        //   age: investorAge,
-        //   retirementAge: investorRetirementAge,
-        //   riskTolerance: investorRiskTolerance,
-        //   investmentGoals: investorGoals,
-        // }
-
-        // setInvestorInfo(investorInfo);
         break;
       case items.length - 1:
         setChatGptFeedbackLoading(true)
@@ -189,7 +212,7 @@ export default function Home() {
         toast.current.show({
           severity: 'info',
           summary: 'Getting Feedback! ',
-          position: 'bottom-center',
+          position: 'bottom',
           detail: 'This may take a few seconds.',
           sticky: true
         });
@@ -495,7 +518,7 @@ export default function Home() {
                       <div style={{ fontSize: '0.75em'}} className='mb-3'>
                         Export your portfolio from your brokerage account and upload the file below.
                         <br></br>
-                        We currently only support the exports of <b>TDAmeritrade</b> & <b>Fidelity</b>, but aim to support more!
+                        We currently only support the exports of the following brokerages: <b>TDAmeritrade</b>, <b>Fidelity</b> & <b>Vanguard</b>.
                       </div>
                       {/* <Button label="Upload"></Button> */}
                       {/* <Toast ref={toast}></Toast> */}
@@ -564,7 +587,10 @@ export default function Home() {
           <br></br>
 
           {/* FINAL STEP */}
-          <div className={ activeIndex === items.length - 1 ? undefined : 'hidden'}>
+          <div
+            className={ activeIndex === items.length - 1 ? undefined : 'hidden'}
+            // ref={feedbackSectionRef}
+          >
             {/* {
               chatGptFeedbackLoading && (
                 <div className="card flex w-full justify-content-center mb-2">
@@ -665,9 +691,28 @@ export default function Home() {
                   label={ activeIndex === 0 ? 'Get Started' : 'Next' }
                   disabled={
                     portfolioHoldings.length === 0 ||
-                    portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0) !== 100
+                    portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0) !== 100 ||
+                    ( activeIndex === 1 && !validateInvestorInfoForm())
                   } 
                   onClick={onClickNext}
+                />
+              )
+            }
+            {
+              activeIndex === items.length - 1 && (
+                <Button
+                  label='Save Feedback'
+                  severity="success"
+                  onClick={() => {
+                    generatePortfolioFeedbackPDF()
+                    // doc.html(feedbackSectionRef.current, {
+                    //   async callback(doc) {
+                    //     // save the document as a PDF with name of pdf_name
+                    //     doc.save("pdf_name");
+                    //   }
+                    // });
+                  }}
+                  disabled={chatGptFeedbackLoading}
                 />
               )
             }
