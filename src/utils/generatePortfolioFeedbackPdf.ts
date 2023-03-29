@@ -1,50 +1,107 @@
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
+// import "jspdf-autotable";
+import { callAddFontPoppinsNormal } from "./Poppins-Regular-normal";
+import { callAddFont } from "./Poppins-SemiBold-normal";
 // Date Fns is used to format the dates we receive
 // from our API call
 // import { format } from "date-fns";
 
 // define a generatePDF function that accepts a tickets argument
 const generatePortfolioFeedbackPDF = (
-  holdings?: any[],
-  diversificationFeedback?: string,
-  recommendedStocksFeedback?: string,
-  riskAssessmentFeedback?: string,
-  summaryFeedback?: string
+  holdings: any[],
+  diversificationFeedback: string,
+  recommendedStocksFeedback: string,
+  riskAssessmentFeedback: string,
+  summaryFeedback: string
 ) => {
+  jsPDF.API.events.push(["addFonts", callAddFont, callAddFontPoppinsNormal]);
+
   const doc = new jsPDF();
-  doc.setFont('helvetica', 'normal')
-  // doc.setFont('Poppins', 'normal')
 
-  // define the columns we want and their titles
-//   const tableColumn = ["Id", "Title", "Issue", "Status", "Closed on"];
-  // define an empty array of rows
-//   const tableRows = [];
+  const tableRows: any = [];
 
-  // for each ticket pass all its data into an array
-//   tickets.forEach(ticket => {
-//     const ticketData = [
-//       ticket.id,
-//       ticket.title,
-//       ticket.request,
-//       ticket.status,
-//       // called date-fns to format the date on the ticket
-//       format(new Date(ticket.updated_at), "yyyy-MM-dd")
-//     ];
-//     // push each tickcet's info into a row
-//     tableRows.push(ticketData);
-//   });
+  holdings.forEach(holding => {
+    const holdingData = [
+      holding.ticker,
+      holding.allocation + '%',
+    ];
+    tableRows.push(holdingData);
+  });
 
-
-  // startY is basically margin-top
-//   doc.autoTable(tableColumn, tableRows, { startY: 20 });
   const date = Date().split(" ");
   // we use a date string to generate our filename.
   const dateStr = date[0] + date[1] + date[2] + date[3] + date[4];
-  // ticket title. and margin-top + margin-left
-  doc.text("test", 14, 15);
-  // we define the name of our PDF file.
-  doc.save(`report_${dateStr}.pdf`);
+
+  // PAGE 1
+
+  // HEADER
+  doc.setFont('Poppins-SemiBold', 'normal')
+  doc.setTextColor(102, 102, 255)
+  doc.setFontSize(30);
+  doc.text("PortfolioBot", 20, 20)
+  doc.setTextColor(0, 0, 0)
+
+  // TODO: Displayer Investor Info
+
+  // autoTable(doc, {
+  //   head: [['Stock', 'Allocation']],
+  //   body: tableRows,
+  //   startY: 70, 
+  // })
+
+  // doc.addPage()
+
+  // DIVERSIFICATION
+  doc.setFont('Poppins-SemiBold', 'normal')
+  doc.setFontSize(20);
+  doc.text("Diversification", 20, 30)
+
+  doc.setFontSize(12);
+  const diversificationFeedbackText = doc.splitTextToSize(diversificationFeedback, 160);
+
+  doc.setFont('Poppins-Regular', 'normal')
+  doc.text(diversificationFeedbackText, 20, 40)
+
+  // PAGE 2
+  doc.addPage()
+
+  // RECOMMENDED STOCKS
+  doc.setFont('Poppins-SemiBold', 'normal')
+  doc.setFontSize(20);
+  doc.text("Stock Recommendations", 20, 20)
+  
+  doc.setFont('Poppins-Regular', 'normal')
+  doc.setFontSize(12);
+  const recommendedStocksText = doc.splitTextToSize(recommendedStocksFeedback, 160);
+  doc.text(recommendedStocksText, 20, 30)
+
+  doc.addPage()
+
+  // RISK ASSESSMENT
+  doc.setFont('Poppins-SemiBold', 'normal')
+  doc.setFontSize(20);
+  doc.text("Risk Assessment", 20, 20)
+
+  doc.setFont('Poppins-Regular', 'normal')
+  doc.setFontSize(12);
+  const riskAssessmentText = doc.splitTextToSize(riskAssessmentFeedback, 160);
+  doc.text(riskAssessmentText, 20, 30)
+
+  doc.addPage()
+  
+  // SUMMARY
+  doc.setFont('Poppins-SemiBold', 'normal')
+  doc.setFontSize(20);
+  doc.text("Summary", 20, 20)
+
+  doc.setFont('Poppins-Regular', 'normal')
+  doc.setFontSize(12);
+  const summaryText = doc.splitTextToSize(summaryFeedback, 160);
+  doc.text(summaryText, 20, 30)
+
+  // SAVE
+  doc.save(`portfolio_bot_report_${dateStr}.pdf`)
 };
 
 export default generatePortfolioFeedbackPDF;

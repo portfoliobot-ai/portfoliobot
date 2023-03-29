@@ -619,40 +619,40 @@ export default function Home() {
                 }
               </AccordionTab>
               <AccordionTab header="What other stocks/ETFS should I invest in?">  
-                  {
-                    recommendedStocksLoading && (
-                      <div className="w-full p-3">
-                        <Skeleton height="2rem" className="mb-2" />
-                      </div>
-                    )
-                  }
-                  {
-                    !recommendedStocksLoading && (
-                      <small className="m-0"  style={{whiteSpace: "pre-line"}}>
-                        <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
-                          { recommendedStocks }
-                        </StyleMatchingStrings>
-                      </small>
-                    )
-                  }
+                {
+                  recommendedStocksLoading && (
+                    <div className="w-full p-3">
+                      <Skeleton height="2rem" className="mb-2" />
+                    </div>
+                  )
+                }
+                {
+                  !recommendedStocksLoading && (
+                    <small className="m-0"  style={{whiteSpace: "pre-line"}}>
+                      <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
+                        { recommendedStocks }
+                      </StyleMatchingStrings>
+                    </small>
+                  )
+                }
               </AccordionTab>
               <AccordionTab header="Are my stocks too risky or too conservative?">  
-                  {
-                    riskAssessmentLoading && (
-                      <div className="w-full p-3">
-                        <Skeleton height="2rem" className="mb-2" />
-                      </div>
-                    )
-                  }
-                  {
-                    !riskAssessmentLoading && (
-                      <small className="m-0"  style={{whiteSpace: "pre-line"}}>
-                        <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
-                          { riskAssessment }
-                        </StyleMatchingStrings>
-                      </small>
-                    )
-                  }
+                {
+                  riskAssessmentLoading && (
+                    <div className="w-full p-3">
+                      <Skeleton height="2rem" className="mb-2" />
+                    </div>
+                  )
+                }
+                {
+                  !riskAssessmentLoading && (
+                    <small className="m-0"  style={{whiteSpace: "pre-line"}}>
+                      <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
+                        { riskAssessment }
+                      </StyleMatchingStrings>
+                    </small>
+                  )
+                }
               </AccordionTab>
               <AccordionTab header="Summary">
                 {
@@ -704,7 +704,13 @@ export default function Home() {
                   label='Save Feedback'
                   severity="success"
                   onClick={() => {
-                    generatePortfolioFeedbackPDF()
+                    generatePortfolioFeedbackPDF(
+                      portfolioHoldings,
+                      diversificationFeedback,
+                      recommendedStocks,
+                      riskAssessment,
+                      feedbackSummary,
+                    )
                     // doc.html(feedbackSectionRef.current, {
                     //   async callback(doc) {
                     //     // save the document as a PDF with name of pdf_name

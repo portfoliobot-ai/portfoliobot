@@ -20,7 +20,7 @@ export default async function handler(
   const portfolioSummaryMessage = `
     My stock portfolio consists of the following: \n
       ${holdingsToAllocationString}
-    Is this a good stock portfolio for a ${investor.age} year old with an aggressive risk tolerance?
+    Is this a good stock portfolio for a ${investor.age} year old with a ${investor.riskTolerance} risk tolerance?
   `
 
   const configuration = new Configuration({
