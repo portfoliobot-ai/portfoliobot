@@ -1,5 +1,4 @@
 import Head from 'next/head'
-import Image from 'next/image'
 
 import styles from '@/styles/Home.module.css'
 
@@ -48,13 +47,6 @@ import jsPDF from 'jspdf';
 // TODO: Refactor into smaller components
 
 export default function Home() {
-  // const doc = new jsPDF({
-  //   format: "a4",
-  //   unit: "px"
-  // });
-
-  // const feedbackSectionRef = useRef<any>(null);
-
   const [activeIndex, setActiveIndex] = useState(0);
   const toast = useRef<any>(null);
   const items: MenuItem[] = [
@@ -501,7 +493,7 @@ export default function Home() {
               {
                 selectedPortfolioOption === "Import" && (
                   <div>
-                    <div className="card flex mb-4">
+                    {/* <div className="card flex mb-4">
                       <div className="flex flex-wrap gap-3">
                           <div className="flex align-items-center">
                               <RadioButton inputId="csv" name="csv" value="CSV" onChange={(e) => {}} checked={true} />
@@ -512,16 +504,13 @@ export default function Home() {
                               <label htmlFor="connect-account" className="ml-2">Connect Account</label>
                           </div>
                       </div>
-                    </div>
-                    <div>
-                      {/* <p>Export your portfolio from your brokerage account and upload the file below.</p> */}
+                    </div> */}
+                    {/* <div>
                       <div style={{ fontSize: '0.75em'}} className='mb-3'>
                         Export your portfolio from your brokerage account and upload the file below.
                         <br></br>
                         We currently only support the exports of the following brokerages: <b>TDAmeritrade</b>, <b>Fidelity</b> & <b>Vanguard</b>.
                       </div>
-                      {/* <Button label="Upload"></Button> */}
-                      {/* <Toast ref={toast}></Toast> */}
                       <FileUpload
                         mode="basic"
                         chooseLabel='Upload'
@@ -531,9 +520,10 @@ export default function Home() {
                         maxFileSize={1000000}
                         onUpload={() => {}}
                       />
-                    </div>
-                    <div>
-                      {/* <h2>Coming Soon!</h2> */}
+                    </div> */}
+                    <div className='text-center'>
+                      <h1>Coming Soon!</h1>
+                      {/* <small>We are working hard so you import .csv and .xls files exported brokeage account, as well as </small> */}
                     </div>
                   </div>
                 )
@@ -700,26 +690,33 @@ export default function Home() {
             }
             {
               activeIndex === items.length - 1 && (
-                <Button
-                  label='Save Feedback'
-                  severity="success"
-                  onClick={() => {
-                    generatePortfolioFeedbackPDF(
-                      portfolioHoldings,
-                      diversificationFeedback,
-                      recommendedStocks,
-                      riskAssessment,
-                      feedbackSummary,
-                    )
-                    // doc.html(feedbackSectionRef.current, {
-                    //   async callback(doc) {
-                    //     // save the document as a PDF with name of pdf_name
-                    //     doc.save("pdf_name");
-                    //   }
-                    // });
-                  }}
-                  disabled={chatGptFeedbackLoading}
-                />
+                <>
+                  {/* <Button
+                    label='Regenerate'
+                    severity="warning"
+                    icon="pi pi-refresh"
+                    onClick={() => {
+                      // TODO: 
+                    }}
+                    disabled={chatGptFeedbackLoading}
+                  />
+                  &nbsp; */}
+                  <Button
+                    label='Download'
+                    severity="success"
+                    icon="pi pi-save"
+                    onClick={() => {
+                      generatePortfolioFeedbackPDF(
+                        portfolioHoldings,
+                        diversificationFeedback,
+                        recommendedStocks,
+                        riskAssessment,
+                        feedbackSummary,
+                      )
+                    }}
+                    disabled={chatGptFeedbackLoading}
+                  />
+                </>
               )
             }
           </div>

@@ -7413,5 +7413,6 @@ export const allStockTickers: string[] = [
   "ZWS",
   "ZYME",
   "ZYNE",
-  "ZYXI"
+  "ZYXI",
+  // TODO: Add ETFS
 ]

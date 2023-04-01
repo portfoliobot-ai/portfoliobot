@@ -53,6 +53,7 @@ const generatePortfolioFeedbackPDF = (
   // doc.addPage()
 
   // DIVERSIFICATION
+  // TODO: make this bolder
   doc.setFont('Poppins-SemiBold', 'normal')
   doc.setFontSize(20);
   doc.text("Diversification", 20, 30)
