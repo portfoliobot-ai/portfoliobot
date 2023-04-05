@@ -35,13 +35,14 @@ import { Skeleton } from 'primereact/skeleton';
         
         
 import Typewriter from 'typewriter-effect';
-import ImageWithFallback from '@/components/ImageWithFallback';
+import ImageWithFallback from '@/components/generic/ImageWithFallback';
 import { InputText } from 'primereact/inputtext';
 import { RiskTolerance } from '@/models/RiskTolerance.enum';
-import StyleMatchingStrings from '@/components/StyleMatchingStrings';
+import StyleMatchingStrings from '@/components/generic/StyleMatchingStrings';
 import { allStockTickers } from '@/resources/stock-tickers';
 import generatePortfolioFeedbackPDF from '@/utils/generatePortfolioFeedbackPdf';
-import jsPDF from 'jspdf';
+
+import { BrowserView, MobileView, isBrowser, isMobile } from 'react-device-detect';
 
 // TODO: Remove any types
 // TODO: Refactor into smaller components
@@ -88,6 +89,8 @@ export default function Home() {
   const [stockSearchSuggestions, setStockSearchSuggestions] = useState([]);
 
   const [portfolioHoldings, setPortfolioHoldings] = useState<any[]>([]);
+
+  const [getStartedClicked, setGetStartedClicked] = useState<boolean>(false)
 
   const searchStocks = (event: any) => {
     fetch(`/api/iexcloud/search/${event.query}`)
@@ -404,11 +407,10 @@ export default function Home() {
       <Toast ref={toast} />
 
       <main className={styles.main}>
-
         <div className={styles.description}>
 
           {/* HEADER SECTION */}
-          { (activeIndex === 0 || activeIndex === 1) && (
+          { (activeIndex === 0 || activeIndex === 1) && isBrowser && (
             <div className='mb-5 text-center'>
               <h1>Are your investments
                 <Typewriter
@@ -430,296 +432,331 @@ export default function Home() {
               </p>
             </div>
           )}
+          {
+            isMobile && !getStartedClicked && (
+              <div className='mb-5 text-center'>
+                <h1>Are your investments</h1>
+                <h1>
+                  <Typewriter
+                    options={{
+                      strings: [
+                        ' diversified?',
+                        ' cost-effective?',
+                        ' too risky?'
+                      ],
+                      autoStart: true,
+                      loop: true,
+                      wrapperClassName: 'emphasized'
+                    }}
+                  />
+                </h1>
+                <br></br>
+                <p className='homepage-secondary-header'>
+                  Get <span className='emphasized'>AI-driven</span> feedback on your stock portfolio in minutes <span className='emphasized'> for free</span>
+                </p>
+                <Button label="Get Started" onClick={() => setGetStartedClicked(true)} />
+              </div>
+            )
+          }
 
-          {/* STEPS */}
-          <div className='mb-3'>
-            <Steps
-              model={items}
-              activeIndex={activeIndex}
-              onSelect={(e) => setActiveIndex(e.index)}
-            />
-          </div>
+          { (isBrowser || (isMobile && getStartedClicked)) && (
+            <>
+              {/* STEPS */}
+              <div className='mb-3'>
+                <Steps
+                  model={items}
+                  activeIndex={activeIndex}
+                  onSelect={(e) => setActiveIndex(e.index)}
+                />
+              </div>
 
-          {/* FIRST STEP */}
-          <div className={ activeIndex === 0 ? undefined : 'hidden'}>
-            <Card>
-              <SelectButton value={selectedPortfolioOption} onChange={(e) => setSelectedPortfolioOption(e.value)} options={portfolioOptions} />
+              {/* FIRST STEP */}
+              <div className={ activeIndex === 0 ? 'undefined' : 'hidden'}>
+                <Card>
+                  <div className='text-center'>
+                    <SelectButton
+                      value={selectedPortfolioOption}
+                      onChange={(e) => setSelectedPortfolioOption(e.value)}
+                      options={portfolioOptions}
+                    />
+                  </div>
+
+                  <br></br>
+
+                  {
+                    selectedPortfolioOption === "Manual" && (
+                      <div>
+                        <div className='mb-1 p-inputgroup'>
+                          <AutoComplete
+                            inputId="stockSearch"
+                            field="symbol"
+                            value={stockSearchSelectedItems}
+                            suggestions={stockSearchSuggestions} 
+                            completeMethod={searchStocks}
+                            // TODO: Remove multiple attribute and make setStockSearchSelectedItems an object not an array
+                            multiple={true}
+                            onChange={(e) => setStockSearchSelectedItems(e.value)}
+                            itemTemplate={stockSearchTemplate}
+                            placeholder="Search for stocks or ETFs e.g. AAPL or Apple"
+                            forceSelection
+                          />
+                        </div>
+
+                        <div style={{ fontSize: '0.7em'}} className='ml-2 mb-3'>
+                          <a href="https://iexcloud.io">Data provided by IEX Cloud</a>
+                        </div>
+
+                        <DataTable
+                          value={portfolioHoldings}
+                          editMode="cell"
+                          size='small'
+                          footerColumnGroup={stockTableFooterGroup}
+                          emptyMessage="Add assets to your portfolio using the search field above."
+                        >
+                          <Column header="Stock" body={stockColumnTemplate}/>
+                          <Column
+                            field="allocation"
+                            header="Allocation"
+                            editor={(options) => allocationEditor(options)}
+                            onCellEditComplete={onPortfolioAllocationCellEditComplete}
+                          />
+                          <Column body={tableActionsCellTemplate} exportable={false}/>
+                        </DataTable>
+                      </div>
+                    )
+                  }
+                  {
+                    selectedPortfolioOption === "Import" && (
+                      <div>
+                        {/* <div className="card flex mb-4">
+                          <div className="flex flex-wrap gap-3">
+                              <div className="flex align-items-center">
+                                  <RadioButton inputId="csv" name="csv" value="CSV" onChange={(e) => {}} checked={true} />
+                                  <label htmlFor="csv" className="ml-2">File Upload</label>
+                              </div>
+                              <div className="flex align-items-center">
+                                  <RadioButton inputId="connect-account" name="account" value="Account" onChange={(e) => {}} checked={false} />
+                                  <label htmlFor="connect-account" className="ml-2">Connect Account</label>
+                              </div>
+                          </div>
+                        </div> */}
+                        {/* <div>
+                          <div style={{ fontSize: '0.75em'}} className='mb-3'>
+                            Export your portfolio from your brokerage account and upload the file below.
+                            <br></br>
+                            We currently only support the exports of the following brokerages: <b>TDAmeritrade</b>, <b>Fidelity</b> & <b>Vanguard</b>.
+                          </div>
+                          <FileUpload
+                            mode="basic"
+                            chooseLabel='Upload'
+                            name="demo[]"
+                            url="/api/upload"
+                            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                            maxFileSize={1000000}
+                            onUpload={() => {}}
+                          />
+                        </div> */}
+                        <div className='text-center'>
+                          <h1>Coming Soon!</h1>
+                          {/* <small>We are working hard so you import .csv and .xls files exported brokeage account, as well as </small> */}
+                        </div>
+                      </div>
+                    )
+                  }
+                </Card>
+              </div>
+
+              {/* SECOND STEP */}
+              <div className={ activeIndex === 1 ? 'step' : 'hidden'}>
+                <Card>
+                  <div className="card flex flex-column md:flex-row gap-3 mb-3">
+                    <div className="p-inputgroup flex-1">
+                        <InputNumber
+                          placeholder="Age"
+                          onChange={(e: InputNumberChangeEvent) => setInvestorAge(e.value)}
+                        />
+                    </div>
+                    <div className="p-inputgroup flex-1">
+                        <InputNumber
+                          id="retirement-age"
+                          placeholder="Retirement Age"
+                          onChange={(e: InputNumberChangeEvent) => setInvestorRetirementAge(e.value)}
+                        />
+                    </div>
+                    <div className="p-inputgroup flex-1">
+                      <Dropdown
+                        value={selectedRiskTolerance}
+                        onChange={(e) => {
+                          setSelectedRiskTolerance(e.value)
+                          setInvestorRiskTolerance(e.value.name)
+                        }}
+                        options={riskTolerances}
+                        optionLabel="name" 
+                        placeholder="Risk Tolerance" />
+                    </div>
+                  </div>
+                  <div className="card flex flex-column md:flex-row gap-3">
+                    <div className="p-inputgroup flex-1">
+                      <InputTextarea
+                        placeholder="Investment Goal(s)"
+                        maxLength={255}
+                        rows={4}
+                        cols={30}
+                        onChange={(e) => setInvestorGoals(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </div>
 
               <br></br>
 
-              {
-                selectedPortfolioOption === "Manual" && (
-                  <div>
-                    <div className='mb-1 p-inputgroup'>
-                      <AutoComplete
-                        inputId="stockSearch"
-                        field="symbol"
-                        value={stockSearchSelectedItems}
-                        suggestions={stockSearchSuggestions} 
-                        completeMethod={searchStocks}
-                        // TODO: Remove multiple attribute and make setStockSearchSelectedItems an object not an array
-                        multiple={true}
-                        onChange={(e) => setStockSearchSelectedItems(e.value)}
-                        itemTemplate={stockSearchTemplate}
-                        placeholder="Search for stocks or ETFs e.g. AAPL or Apple"
-                        forceSelection
-                      />
-                    </div>
-
-                    <div style={{ fontSize: '0.7em'}} className='ml-2 mb-3'>
-                      <a href="https://iexcloud.io">Data provided by IEX Cloud</a>
-                    </div>
-
-                    <DataTable
-                      value={portfolioHoldings}
-                      showGridlines
-                      editMode="cell"
-                      size='small'
-                      footerColumnGroup={stockTableFooterGroup}
-                      emptyMessage="Add assets to your portfolio using the search field above."
-                    >
-                      <Column header="Stock" body={stockColumnTemplate}/>
-                      <Column
-                        field="allocation"
-                        header="Allocation %"
-                        editor={(options) => allocationEditor(options)}
-                        onCellEditComplete={onPortfolioAllocationCellEditComplete}
-                      />
-                      <Column body={tableActionsCellTemplate} exportable={false}/>
-                    </DataTable>
-                  </div>
-                )
-              }
-              {
-                selectedPortfolioOption === "Import" && (
-                  <div>
-                    {/* <div className="card flex mb-4">
-                      <div className="flex flex-wrap gap-3">
-                          <div className="flex align-items-center">
-                              <RadioButton inputId="csv" name="csv" value="CSV" onChange={(e) => {}} checked={true} />
-                              <label htmlFor="csv" className="ml-2">File Upload</label>
-                          </div>
-                          <div className="flex align-items-center">
-                              <RadioButton inputId="connect-account" name="account" value="Account" onChange={(e) => {}} checked={false} />
-                              <label htmlFor="connect-account" className="ml-2">Connect Account</label>
-                          </div>
-                      </div>
-                    </div> */}
-                    {/* <div>
-                      <div style={{ fontSize: '0.75em'}} className='mb-3'>
-                        Export your portfolio from your brokerage account and upload the file below.
-                        <br></br>
-                        We currently only support the exports of the following brokerages: <b>TDAmeritrade</b>, <b>Fidelity</b> & <b>Vanguard</b>.
-                      </div>
-                      <FileUpload
-                        mode="basic"
-                        chooseLabel='Upload'
-                        name="demo[]"
-                        url="/api/upload"
-                        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                        maxFileSize={1000000}
-                        onUpload={() => {}}
-                      />
-                    </div> */}
-                    <div className='text-center'>
-                      <h1>Coming Soon!</h1>
-                      {/* <small>We are working hard so you import .csv and .xls files exported brokeage account, as well as </small> */}
-                    </div>
-                  </div>
-                )
-              }
-            </Card>
-          </div>
-
-          {/* SECOND STEP */}
-          <div className={ activeIndex === 1 ? 'step' : 'hidden'}>
-            <Card>
-              <div className="card flex flex-column md:flex-row gap-3 mb-3">
-                <div className="p-inputgroup flex-1">
-                    <InputNumber
-                      placeholder="Age"
-                      onChange={(e: InputNumberChangeEvent) => setInvestorAge(e.value)}
-                    />
-                </div>
-                <div className="p-inputgroup flex-1">
-                    <InputNumber
-                      id="retirement-age"
-                      placeholder="Retirement Age"
-                      onChange={(e: InputNumberChangeEvent) => setInvestorRetirementAge(e.value)}
-                    />
-                </div>
-                <div className="p-inputgroup flex-1">
-                  <Dropdown
-                    value={selectedRiskTolerance}
-                    onChange={(e) => {
-                      setSelectedRiskTolerance(e.value)
-                      setInvestorRiskTolerance(e.value.name)
-                    }}
-                    options={riskTolerances}
-                    optionLabel="name" 
-                    placeholder="Risk Tolerance" />
-                </div>
-              </div>
-              <div className="card flex flex-column md:flex-row gap-3">
-                <div className="p-inputgroup flex-1">
-                  <InputTextarea
-                    placeholder="Investment Goal(s)"
-                    maxLength={255}
-                    rows={4}
-                    cols={30}
-                    onChange={(e) => setInvestorGoals(e.target.value)}
-                  />
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          <br></br>
-
-          {/* FINAL STEP */}
-          <div
-            className={ activeIndex === items.length - 1 ? undefined : 'hidden'}
-            // ref={feedbackSectionRef}
-          >
-            {/* {
-              chatGptFeedbackLoading && (
-                <div className="card flex w-full justify-content-center mb-2">
-                  <Message text="Getting your feedback! This may take a few seconds." />
-                </div>
-              )
-            } */}
-
-            <Accordion multiple activeIndex={[0,1,2,3]}>
-              <AccordionTab header="Is my portfolio diversified enough?">
-                {
-                  diversificationLoading && (
-                    <div className="w-full p-3">
-                      <Skeleton height="2rem" className="mb-2" />
+              {/* FINAL STEP */}
+              <div
+                className={ activeIndex === items.length - 1 ? undefined : 'hidden'}
+                // ref={feedbackSectionRef}
+              >
+                {/* {
+                  chatGptFeedbackLoading && (
+                    <div className="card flex w-full justify-content-center mb-2">
+                      <Message text="Getting your feedback! This may take a few seconds." />
                     </div>
                   )
-                }
-                {
-                  !diversificationLoading && (
-                    <small className="m-0"  style={{whiteSpace: "pre-line"}}>
-                      <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
-                        { diversificationFeedback }
-                      </StyleMatchingStrings>
-                    </small>
-                  )
-                }
-              </AccordionTab>
-              <AccordionTab header="What other stocks/ETFS should I invest in?">  
-                {
-                  recommendedStocksLoading && (
-                    <div className="w-full p-3">
-                      <Skeleton height="2rem" className="mb-2" />
-                    </div>
-                  )
-                }
-                {
-                  !recommendedStocksLoading && (
-                    <small className="m-0"  style={{whiteSpace: "pre-line"}}>
-                      <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
-                        { recommendedStocks }
-                      </StyleMatchingStrings>
-                    </small>
-                  )
-                }
-              </AccordionTab>
-              <AccordionTab header="Are my stocks too risky or too conservative?">  
-                {
-                  riskAssessmentLoading && (
-                    <div className="w-full p-3">
-                      <Skeleton height="2rem" className="mb-2" />
-                    </div>
-                  )
-                }
-                {
-                  !riskAssessmentLoading && (
-                    <small className="m-0"  style={{whiteSpace: "pre-line"}}>
-                      <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
-                        { riskAssessment }
-                      </StyleMatchingStrings>
-                    </small>
-                  )
-                }
-              </AccordionTab>
-              <AccordionTab header="Summary">
-                {
-                  feedbackSummaryLoading && (
-                    <div className="w-full p-3">
-                      <Skeleton height="2rem" className="mb-2" />
-                    </div>
-                  )
-                }
-                {
-                  !feedbackSummaryLoading && (
-                    <small className="m-0"  style={{whiteSpace: "pre-line"}}>
-                      <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
-                        { feedbackSummary }
-                      </StyleMatchingStrings>
-                    </small>
-                  )
-                }
-              </AccordionTab>
-            </Accordion>
-          </div>
+                } */}
 
-          <br></br>
-
-          {/* BUTTONS */}
-          <div className='button-panel'>
-            {
-              activeIndex > 0 && (
-                <Button label="Back" onClick={() => setActiveIndex(activeIndex - 1)} />
-              )
-            }
-            &nbsp;
-            {
-              activeIndex < items.length - 1 && (
-                <Button
-                  label={ activeIndex === 0 ? 'Get Started' : 'Next' }
-                  disabled={
-                    portfolioHoldings.length === 0 ||
-                    portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0) !== 100 ||
-                    ( activeIndex === 1 && !validateInvestorInfoForm())
-                  } 
-                  onClick={onClickNext}
-                />
-              )
-            }
-            {
-              activeIndex === items.length - 1 && (
-                <>
-                  {/* <Button
-                    label='Regenerate'
-                    severity="warning"
-                    icon="pi pi-refresh"
-                    onClick={() => {
-                      // TODO: 
-                    }}
-                    disabled={chatGptFeedbackLoading}
-                  />
-                  &nbsp; */}
-                  <Button
-                    label='Download'
-                    severity="success"
-                    icon="pi pi-save"
-                    onClick={() => {
-                      generatePortfolioFeedbackPDF(
-                        portfolioHoldings,
-                        diversificationFeedback,
-                        recommendedStocks,
-                        riskAssessment,
-                        feedbackSummary,
+                <Accordion multiple activeIndex={[0,1,2,3]}>
+                  <AccordionTab header="Is my portfolio diversified enough?">
+                    {
+                      diversificationLoading && (
+                        <div className="w-full p-3">
+                          <Skeleton height="2rem" className="mb-2" />
+                        </div>
                       )
-                    }}
-                    disabled={chatGptFeedbackLoading}
-                  />
-                </>
-              )
-            }
-          </div>
+                    }
+                    {
+                      !diversificationLoading && (
+                        <small className="m-0"  style={{whiteSpace: "pre-line"}}>
+                          <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
+                            { diversificationFeedback }
+                          </StyleMatchingStrings>
+                        </small>
+                      )
+                    }
+                  </AccordionTab>
+                  <AccordionTab header="What other stocks/ETFS should I invest in?">  
+                    {
+                      recommendedStocksLoading && (
+                        <div className="w-full p-3">
+                          <Skeleton height="2rem" className="mb-2" />
+                        </div>
+                      )
+                    }
+                    {
+                      !recommendedStocksLoading && (
+                        <small className="m-0"  style={{whiteSpace: "pre-line"}}>
+                          <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
+                            { recommendedStocks }
+                          </StyleMatchingStrings>
+                        </small>
+                      )
+                    }
+                  </AccordionTab>
+                  <AccordionTab header="Are my stocks too risky or too conservative?">  
+                    {
+                      riskAssessmentLoading && (
+                        <div className="w-full p-3">
+                          <Skeleton height="2rem" className="mb-2" />
+                        </div>
+                      )
+                    }
+                    {
+                      !riskAssessmentLoading && (
+                        <small className="m-0"  style={{whiteSpace: "pre-line"}}>
+                          <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
+                            { riskAssessment }
+                          </StyleMatchingStrings>
+                        </small>
+                      )
+                    }
+                  </AccordionTab>
+                  <AccordionTab header="Summary">
+                    {
+                      feedbackSummaryLoading && (
+                        <div className="w-full p-3">
+                          <Skeleton height="2rem" className="mb-2" />
+                        </div>
+                      )
+                    }
+                    {
+                      !feedbackSummaryLoading && (
+                        <small className="m-0"  style={{whiteSpace: "pre-line"}}>
+                          <StyleMatchingStrings tags={allStockTickers} matchedClassName='emphasized'>
+                            { feedbackSummary }
+                          </StyleMatchingStrings>
+                        </small>
+                      )
+                    }
+                  </AccordionTab>
+                </Accordion>
+              </div>
+
+              <br></br>
+
+              {/* BUTTONS */}
+              <div className='button-panel text-center'>
+                {
+                  activeIndex > 0 && (
+                    <Button label="Back" onClick={() => setActiveIndex(activeIndex - 1)} />
+                  )
+                }
+                &nbsp;
+                {
+                  activeIndex < items.length - 1 && (
+                    <Button
+                      label='Next'
+                      disabled={
+                        portfolioHoldings.length === 0 ||
+                        portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0) !== 100 ||
+                        ( activeIndex === 1 && !validateInvestorInfoForm())
+                      } 
+                      onClick={onClickNext}
+                    />
+                  )
+                }
+                {
+                  activeIndex === items.length - 1 && (
+                    <>
+                      {/* <Button
+                        label='Regenerate'
+                        severity="warning"
+                        icon="pi pi-refresh"
+                        onClick={() => {
+                          // TODO: 
+                        }}
+                        disabled={chatGptFeedbackLoading}
+                      />
+                      &nbsp; */}
+                      <Button
+                        label='Download'
+                        severity="success"
+                        icon="pi pi-save"
+                        onClick={() => {
+                          generatePortfolioFeedbackPDF(
+                            portfolioHoldings,
+                            diversificationFeedback,
+                            recommendedStocks,
+                            riskAssessment,
+                            feedbackSummary,
+                          )
+                        }}
+                        disabled={chatGptFeedbackLoading}
+                      />
+                    </>
+                  )
+                }
+              </div>
+            </>
+          )}
 
         </div>
 

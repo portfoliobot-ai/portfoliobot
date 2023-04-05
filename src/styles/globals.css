@@ -47,6 +47,12 @@ footer {
   color: #6666ff !important;
 }
 
+.p-datatable-emptymessage {
+  font-size: 12px;
+}
+
+/** Custom Classes */
+
 .emphasized {
   font-weight: bold;
   color: #6666ff;
