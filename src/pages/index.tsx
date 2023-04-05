@@ -451,10 +451,10 @@ export default function Home() {
                   />
                 </h1>
                 <br></br>
-                <p className='homepage-secondary-header mb-2'>
+                <p className='homepage-secondary-header mb-4'>
                   <span className='emphasized'>AI-driven</span> stock portfolio feedback <span className='emphasized'>for free</span>
                 </p>
-                <Button label="Get Started" onClick={() => setGetStartedClicked(true)} />
+                <Button label="Get Started" className='pb-btn' onClick={() => setGetStartedClicked(true)} />
               </div>
             )
           }
@@ -706,7 +706,7 @@ export default function Home() {
               <div className='button-panel text-center'>
                 {
                   activeIndex > 0 && (
-                    <Button label="Back" onClick={() => setActiveIndex(activeIndex - 1)} />
+                    <Button label="Back" className='pb-btn' onClick={() => setActiveIndex(activeIndex - 1)} />
                   )
                 }
                 &nbsp;
@@ -714,6 +714,7 @@ export default function Home() {
                   activeIndex < items.length - 1 && (
                     <Button
                       label='Next'
+                      className='pb-btn'
                       disabled={
                         portfolioHoldings.length === 0 ||
                         portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0) !== 100 ||
@@ -740,6 +741,7 @@ export default function Home() {
                         label='Download'
                         severity="success"
                         icon="pi pi-save"
+                        className='pb-btn'
                         onClick={() => {
                           generatePortfolioFeedbackPDF(
                             portfolioHoldings,
