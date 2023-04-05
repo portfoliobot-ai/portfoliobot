@@ -428,7 +428,7 @@ export default function Home() {
               </h1>
               <br></br>
               <p className='homepage-secondary-header'>
-                Get <span className='emphasized'>AI-driven</span> feedback on your stock portfolio in minutes <span className='emphasized'> for free</span>
+                <span className='emphasized'>AI-driven</span> stock portfolio feedback <span className='emphasized'>for free</span>
               </p>
             </div>
           )}
@@ -451,8 +451,8 @@ export default function Home() {
                   />
                 </h1>
                 <br></br>
-                <p className='homepage-secondary-header'>
-                  Get <span className='emphasized'>AI-driven</span> feedback on your stock portfolio in minutes <span className='emphasized'> for free</span>
+                <p className='homepage-secondary-header mb-2'>
+                  <span className='emphasized'>AI-driven</span> stock portfolio feedback <span className='emphasized'>for free</span>
                 </p>
                 <Button label="Get Started" onClick={() => setGetStartedClicked(true)} />
               </div>
@@ -511,7 +511,7 @@ export default function Home() {
                           editMode="cell"
                           size='small'
                           footerColumnGroup={stockTableFooterGroup}
-                          emptyMessage="Add assets to your portfolio using the search field above."
+                          emptyMessage="Add assets to your portfolio using the search field above"
                         >
                           <Column header="Stock" body={stockColumnTemplate}/>
                           <Column
