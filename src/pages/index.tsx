@@ -28,6 +28,7 @@ import { Divider } from 'primereact/divider';
 import { Message } from 'primereact/message';
 import { Badge } from 'primereact/badge';
 import { RadioButton } from 'primereact/radiobutton';
+import { Fieldset } from 'primereact/fieldset';
 import { FileUpload } from 'primereact/fileupload';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { InputNumber, InputNumberChangeEvent } from 'primereact/inputnumber';
@@ -322,7 +323,7 @@ export default function Home() {
       style={{
         color: portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0) === 100 ?
           '#32a852' :
-          '#ff1717'
+          '#ff922a'
       }}
     >
       Total: {portfolioHoldings.reduce((sum: number, stock: any) => (sum += Number(stock.allocation)), 0)}%
@@ -472,7 +473,7 @@ export default function Home() {
 
               {/* FIRST STEP */}
               <div className={ activeIndex === 0 ? 'undefined' : 'hidden'}>
-                <Card>
+                <Fieldset>
                   <div className='text-center'>
                     <SelectButton
                       value={selectedPortfolioOption}
@@ -563,12 +564,12 @@ export default function Home() {
                       </div>
                     )
                   }
-                </Card>
+                </Fieldset>
               </div>
 
               {/* SECOND STEP */}
               <div className={ activeIndex === 1 ? 'step' : 'hidden'}>
-                <Card>
+                <Fieldset>
                   <div className="card flex flex-column md:flex-row gap-3 mb-3">
                     <div className="p-inputgroup flex-1">
                         <InputNumber
@@ -606,7 +607,7 @@ export default function Home() {
                       />
                     </div>
                   </div>
-                </Card>
+                </Fieldset>
               </div>
 
               <br></br>
