@@ -1,3 +1,13 @@
+# PortfolioBot
+
+PortfolioBot is a web app that generates AI feedback on investor portfolios, assessing criteria like diversification, user timeline, & risk tolerance. It is developed using TypeScript, Next.js, & OpenAI and is deployed to Vercel with Supabase as the database.
+
+![Screenshot of PortfolioBot](./Portfolio-Bot.png)
+
+![Screenshot of PortfolioBot](./Portfolio-Bot-2.png)
+
+![Screenshot of PortfolioBot](./Portfolio-Bot-3.png)
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
